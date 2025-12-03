@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-12">
+
+    <!-- Bouton de Retour -->
+    <a href="{{ url_for('index') }}" class="inline-flex items-center text-gray-400 hover:text-accent transition duration-150">
+        <i class="fas fa-arrow-left mr-2"></i> Retour au Catalogue
+    </a>
+
+    <!-- Grille principale de l'objet (Image & Détails) -->
+    <div class="bg-gray-800 rounded-3xl shadow-2xl p-6 lg:p-10 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+
+        <!-- Colonne 1 : Image et Titre -->
+        <div class="space-y-6">
+            <h1 class="text-4xl lg:text-5xl font-extrabold text-white leading-tight">
+                {{ obj.nom_fr }}
+            </h1>
+            <p class="text-lg font-semibold text-accent uppercase tracking-wider">
+                <i class="fas fa-tag mr-2"></i> {{ obj.nom_categorie }}
+            </p>
+
+            <!-- Image de l'Objet (F.02) -->
+            <div class="rounded-xl overflow-hidden shadow-xl border-4 border-gray-700">
+                <img src="{{ obj.url_image }}" 
+                     alt="Vue détaillée de {{ obj.nom_fr }}" 
+                     class="w-full h-auto object-cover"
+                     onerror="this.onerror=null; this.src='https://placehold.co/800x600/1f2937/d1d5db?text=Image+Non+Disponible';"
+                >
+            </div>
+        </div>
+
+        <!-- Colonne 2 : Description et Données Techniques -->
+        <div class="space-y-8">
+            <section class="prose max-w-none prose-invert">
+                <h2 class="text-3xl font-bold text-white border-b border-gray-700 pb-2 mb-4">Description</h2>
+                <p class="text-gray-300 text-lg leading-relaxed whitespace-pre-line">
+                    {{ obj.description }}
+                </p>
+            </section>
+
+            <!-- Fiche Technique -->
+            <section class="bg-gray-900 p-6 rounded-xl shadow-inner border border-gray-700">
+                <h2 class="text-2xl font-bold text-accent mb-4">Données Techniques</h2>
+                <dl class="space-y-3">
+                    
+                    <!-- Distance -->
+                    <div class="flex justify-between items-center border-b border-gray-700 pb-2">
+                        <dt class="flex items-center text-gray-400">
+                            <i class="fas fa-route mr-3 w-5 text-accent"></i> Distance (AL) :
+                        </dt>
+                        <dd class="text-white font-semibold text-right">
+                            {{ "{:,.2f}".format(obj.distance_al) | replace(',', ' ') }}
+                        </dd>
+                    </div>
+
+                    <!-- Catégorie -->
+                    <div class="flex justify-between items-center border-b border-gray-700 pb-2">
+                        <dt class="flex items-center text-gray-400">
+                            <i class="fas fa-flask mr-3 w-5 text-accent"></i> Type d'Objet :
+                        </dt>
+                        <dd class="text-white font-semibold text-right">{{ obj.nom_categorie }}</dd>
+                    </div>
+
+                    <!-- Publication -->
+                    <div class="flex justify-between items-center">
+                        <dt class="flex items-center text-gray-400">
+                            <i class="fas fa-calendar-alt mr-3 w-5 text-accent"></i> Date de Publication :
+                        </dt>
+                        <dd class="text-white font-semibold text-right">{{ obj.date_publication }}</dd>
+                    </div>
+                </dl>
+            </section>
+        </div>
+
+    </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    
+    <section class="text-center py-6 bg-gray-900 rounded-xl shadow-xl border border-gray-700">
+        <h1 class="text-4xl font-extrabold text-white mb-2">
+            Votre Avis Compte ! <i class="fas fa-poll text-accent ml-2"></i>
+        </h1>
+        <p class="text-lg text-gray-400">
+            Aidez-nous à améliorer AstroLearn en répondant à notre court sondage sur votre objet céleste préféré.
+        </p>
+    </section>
+
+    <!-- Zone d'intégration du Formulaire Externe (F.04) -->
+    <section class="bg-gray-800 p-4 sm:p-6 rounded-xl shadow-2xl border border-gray-700">
+        <h2 class="text-2xl font-semibold text-white mb-4 border-b border-gray-700 pb-3">
+            Sondage "Objet Céleste Favori"
+        </h2>
+        
+        <!-- Le iframe intègre le formulaire externe (ex: Tally) -->
+        <!-- L'URL est passée via le contrôleur app.py -->
+        <div class="relative w-full overflow-hidden" style="padding-top: 56.25%;"> 
+            <iframe src="{{ external_url }}" 
+                    class="absolute top-0 left-0 w-full h-full border-none rounded-lg" 
+                    frameborder="0" 
+                    marginheight="0" 
+                    marginwidth="0" 
+                    title="Formulaire d'Avis AstroLearn (via Tally ou équivalent)">
+            </iframe>
+        </div>
+        
+        <p class="text-sm text-gray-500 mt-4 text-center">
+            Note: Ce formulaire est hébergé sur une plateforme externe (l'URL est simulée en mode développement).
+        </p>
+    </section>
+</div>
+{% endblock content %}

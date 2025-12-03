@@ -1,0 +1,21 @@
+# Fichier .gitignore pour un projet Flask/Python
+# ----------------------------------------------
+
+# 1. Environnement virtuel
+# Le dossier créé par "python -m venv venv"
+venv/
+.venv/
+
+# 2. Fichiers de cache Python
+__pycache__/
+*.pyc
+
+# 3. Base de données SQLite (données générées)
+*.db
+!astrolearn.db # Décommenter si vous voulez suivre le fichier mais ignorer les changements de contenu
+astrolearn.db
+
+# 4. Fichiers de log et de session
+*.log
+.DS_Store # macOS
+.vscode/ # Dossiers d'IDE (facultatif)

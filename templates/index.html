@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-12">
+    <section>
+        <h2 class="text-4xl font-bold text-accent mb-8 border-b border-gray-700 pb-3">
+            Découvertes Récemment Cataloguées
+        </h2>
+
+        {% if objects %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for obj in objects %}
+                    <div class="bg-gray-800 rounded-xl overflow-hidden shadow-xl">
+                        <a href="{{ url_for('object_detail', object_id=obj.id_objet) }}">
+                            <img src="{{ obj.url_image }}" alt="{{ obj.nom_fr }}" class="w-full h-48 object-cover">
+                        </a>
+                        <div class="p-4">
+                            <h3 class="text-2xl font-semibold text-white truncate">{{ obj.nom_fr }}</h3>
+                            <p class="text-sm text-gray-500">{{ obj.nom_categorie }}</p>
+                            <p class="text-gray-400 mt-2 text-sm line-clamp-3">{{ obj.extrait_description }}</p>
+                            {% if obj.nom_categorie in ['Planète', 'Lune', 'Astéroïde'] %}
+                                <a href="{{ url_for('solar_system_detail', body_name=obj.nom_scientifique | default(obj.nom_fr)) }}" 
+                                   class="text-accent text-sm mt-2 block hover:underline">
+                                    Voir détails du Système Solaire <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center p-10 bg-gray-800 rounded-xl">
+                <p class="text-xl text-gray-400">Aucun objet céleste n'a encore été catalogué.</p>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock content %}

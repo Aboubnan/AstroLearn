@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ title }}{% endblock title %} | AstroLearn</title>
+    <!-- Utilisation de Tailwind CSS pour un design responsive et moderne -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLMDJ8u7X6J2uF20TQQE89EFAvJ0zI3u83K3G1p6gPz9r8xHw/r0B/4eR5gO+vR0Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Configuration du thème sombre selon le cahier des charges */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* Fond bleu nuit/noir */
+            color: #c9d1d9; /* Texte clair */
+        }
+        .text-accent {
+            color: #ffaa00; /* Orange/jaune pour l'accentuation */
+        }
+        .bg-accent {
+            background-color: #ffaa00;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Barre de Navigation (Header) -->
+    <header class="bg-gray-900 shadow-lg sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <!-- Logo / Nom du Site -->
+            <a href="{{ url_for('index') }}" class="flex items-center space-x-2">
+                <i class="fas fa-satellite text-2xl text-accent"></i>
+                <span class="text-2xl font-bold text-white">AstroLearn</span>
+            </a>
+
+            <!-- Menu de Navigation (Desktop/Mobile) -->
+            <div class="flex items-center space-x-6">
+                <!-- Liens principaux -->
+                <div class="hidden md:flex space-x-6">
+                    <a href="{{ url_for('index') }}" class="hover:text-accent transition duration-150">Catalogue</a>
+                    <a href="{{ url_for('chatbot') }}" class="hover:text-accent transition duration-150">AstroIA Chatbot</a>
+                    <a href="{{ url_for('formulaire') }}" class="hover:text-accent transition duration-150">Sondage & Avis</a>
+                </div>
+
+                <!-- Section Admin -->
+                {% if session.get('is_admin') %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="text-sm font-semibold bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-full shadow-md transition duration-150">
+                        Admin <i class="fas fa-lock-open ml-1"></i>
+                    </a>
+                    <a href="{{ url_for('admin_logout') }}" class="text-sm text-red-400 hover:text-red-500 transition duration-150">
+                        Déconnexion
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('admin_login') }}" class="text-sm font-semibold hover:text-accent transition duration-150">
+                        Admin <i class="fas fa-lock ml-1"></i>
+                    </a>
+                {% endif %}
+
+                <!-- Menu Mobile (Icône) - Implémentation JS non incluse, visuel seulement -->
+                <button class="md:hidden text-2xl text-white hover:text-accent">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Affichage des Messages Flash -->
+    <div class="container mx-auto px-4 pt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="space-y-2 mb-4">
+                {% for category, message in messages %}
+                    <li class="p-3 rounded-lg shadow-md {% if category == 'error' %}bg-red-800 text-white{% elif category == 'success' %}bg-green-800 text-white{% else %}bg-blue-800 text-white{% endif %} transition duration-300">
+                        {{ message }}
+                    </li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Contenu Principal -->
+    <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Bloc où le contenu spécifique de chaque page sera injecté -->
+        {% block content %}{% endblock content %}
+    </main>
+
+    <!-- Pied de Page (Footer) -->
+    <footer class="bg-gray-900 mt-auto">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-gray-400">
+            <p>&copy; {{ now.year | default('2024') }} AstroLearn. Tous droits réservés.</p>
+            <p class="mt-2">
+                <a href="#" class="hover:text-accent transition duration-150">Confidentialité</a> | 
+                <a href="#" class="hover:text-accent transition duration-150">Conditions d'Utilisation</a>
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>
