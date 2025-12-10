@@ -13,7 +13,8 @@ import requests
 # AJOUT : URL pour l'API NASA Image and Video Library
 NASA_IMAGES_URL = "https://images-api.nasa.gov/search"
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify # <-- jsonify est importé !
+
 
 # Importation du Modèle et de la Configuration
 from database import (
@@ -62,7 +63,7 @@ def admin_required(view_func):
 # 2. FONCTIONS UTILITAIRES API (F.03 : Chatbot & API Externes)
 # ----------------------------------------------------
 
-# REMPLACEZ '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' PAR VOTRE VRAI TOKEN D'ACCÈS HUGGING FACE
+# REMPLACEZ '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' PAR VOTRE VRAI TOKEN D'ACCÈS HUGGING FACE
 API_KEY = "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" 
 
 # NOUVELLE CONSTANTE : Point de terminaison du modèle (Mistral 7B Instruct v0.2)
@@ -353,58 +354,51 @@ def object_detail(object_id):
                            now=datetime.datetime.now(),
                            title=f"Détail : {obj['nom_fr']}")
 
-@app.route('/chatbot', methods=['GET', 'POST'])
-def chatbot():
-    """Route de la page Chatbot (F.03)."""
-    user_message = ""
-    ai_response_text = ""
-    sources = []
+# NOUVELLE ROUTE API POUR LE CHATBOT FLOTTANT (REMPLACE L'ANCIENNE ROUTE /chatbot)
+@app.route('/api/chatbot', methods=['POST'])
+def api_chatbot():
+    """Point de terminaison API pour le chatbot (appelé par AJAX)."""
     
-    if request.method == 'POST':
-        user_message = request.form.get('message', '')
-        if user_message:
-            system_prompt = "Act as an expert astrophysicist and provide a concise, factual answer about astronomy. Respond in French."
-            
-            # CHANGEMENT : Appel à la nouvelle fonction Hugging Face
-            api_result = call_hf_api(user_message, system_prompt)
-            
-            # Extraction des données (le reste reste identique car nous simulons le format de réponse)
-            try:
-                candidate = api_result.get('candidates', [{}])[0]
-                ai_response_text = candidate.get('content', {}).get('parts', [{}])[0].get('text', 'Erreur lors de la génération de la réponse.')
-                
-                # Extraction des sources (Grounding)
-                grounding_metadata = candidate.get('groundingMetadata', {})
-                if grounding_metadata and grounding_metadata.get('groundingAttributions'):
-                    sources = [
-                        {
-                            'uri': attr.get('web', {}).get('uri'),
-                            'title': attr.get('web', {}).get('title'),
-                        }
-                        for attr in grounding_metadata['groundingAttributions']
-                        if attr.get('web', {}).get('uri') and attr.get('web', {}).get('title')
-                    ]
+    # Assure que la requête contient des données JSON
+    if not request.is_json:
+        return jsonify({"error": "Missing JSON in request"}), 400
 
-            except Exception as e:
-                ai_response_text = f"Une erreur s'est produite lors du traitement de l'API. ({e})"
-                print(f"Erreur d'extraction de réponse API: {e}")
+    data = request.get_json()
+    user_message = data.get('message', '').strip()
 
-    # Appel à la Vue
-    return render_template('chatbot.html',
-                            user_message=user_message,
-                            ai_response_text=ai_response_text,
-                            sources=sources,
-                            now=datetime.datetime.now(),
-                            title="Chatbot AstroIA")
+    if not user_message:
+        return jsonify({"error": "Message utilisateur manquant"}), 400
+    
+    # Le system_prompt est défini ici pour l'appel à l'IA
+    system_prompt = "Act as an expert astrophysicist and provide a concise, factual answer about astronomy. Respond in French. Do not mention that you are an AI, a model or a bot."
+    
+    # Appel à la fonction Hugging Face
+    api_result = call_hf_api(user_message, system_prompt)
+    
+    # Extraction des données
+    try:
+        candidate = api_result.get('candidates', [{}])[0]
+        ai_response_text = candidate.get('content', {}).get('parts', [{}])[0].get('text', 'Erreur lors de la génération de la réponse par l\'IA.')
+        
+        # Retourne la réponse en JSON pour le JavaScript
+        return jsonify({
+            "response": ai_response_text
+        })
+        
+    except Exception as e:
+        print(f"Erreur d'extraction de réponse API: {e}")
+        # Retourne une erreur formatée pour le front-end
+        return jsonify({"error": "Une erreur inattendue s'est produite lors du traitement de l'IA."}), 500
+
 
 @app.route('/formulaire')
 def formulaire():
     """Route pour le formulaire (F.04)."""
     EXTERNAL_FORM_URL = "https://tally.so/r/jaZGVR"
     return render_template('formulaire.html',
-                            external_url=EXTERNAL_FORM_URL,
-                            now=datetime.datetime.now(),
-                            title="Sondage AstroLearn")
+                           external_url=EXTERNAL_FORM_URL,
+                           now=datetime.datetime.now(),
+                           title="Sondage AstroLearn")
 
 @app.route('/admin_login', methods=['GET', 'POST'])
 def admin_login():
@@ -429,16 +423,16 @@ def admin_login():
             flash("Identifiant ou mot de passe incorrect.", 'error')
             
     return render_template('login.html',
-                            now=datetime.datetime.now(),
-                            title="Connexion Administrateur")
+                           now=datetime.datetime.now(),
+                           title="Connexion Administrateur")
 
 @app.route('/admin_dashboard')
 @admin_required # Protection de la route
 def admin_dashboard():
     """Tableau de bord Admin (Route protégée)."""
     return render_template('admin_dashboard.html',
-                            now=datetime.datetime.now(),
-                            title="Tableau de Bord Admin")
+                           now=datetime.datetime.now(),
+                           title="Tableau de Bord Admin")
 
 # --- Route d'ingestion utilisant la pagination ---
 @app.route('/admin/ingest_solar_system', methods=['POST'])

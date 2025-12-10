@@ -1,0 +1,135 @@
+/*
+ * Fichier: chatbot_widget.css
+ * Styles pour le widget de discussion flottant AstroIA.
+ */
+
+/* Style du Widget Flottant */
+#chatbot-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000; /* Assure qu'il est au-dessus des autres éléments */
+}
+
+/* Bouton d'ouverture (La Planète) */
+#chatbot-open-btn {
+    width: 12em;
+    height: 12em;
+    border-radius: 50%;
+    color: white;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s ease;
+}
+#chatbot-open-btn:hover {
+    transform: scale(1.05);
+}
+
+/* Fenêtre de Discussion */
+#chatbot-window {
+    width: 320px;
+    height: 450px;
+    background-color: #161b22; /* Fond plus clair que le body pour le contraste */
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    bottom: 0; /* Positionne la fenêtre juste au-dessus du bas */
+    right: 0;
+    z-index: 999;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.chatbot-header {
+    background-color: #3f51b5;
+    color: white;
+    padding: 12px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+}
+
+#chatbot-close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+#chatbot-messages {
+    flex-grow: 1;
+    padding: 15px;
+    overflow-y: auto;
+    /* Scrollbar invisible (pour Chrome/Edge/Safari) */
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.message {
+    padding: 10px;
+    border-radius: 15px;
+    margin-bottom: 15px;
+    max-width: 85%;
+    word-wrap: break-word;
+}
+
+.ai-message {
+    background-color: #21262d; /* Couleur IA sombre */
+    align-self: flex-start;
+    margin-right: auto;
+}
+
+.user-message {
+    background-color: #3f51b5; /* Couleur utilisateur (Bleu) */
+    color: white;
+    margin-left: auto;
+    text-align: right;
+}
+
+#chatbot-form {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #21262d;
+}
+
+#chatbot-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #444c56;
+    background-color: #0d1117;
+    color: #c9d1d9;
+    border-radius: 5px 0 0 5px;
+    outline: none;
+}
+
+#chatbot-form button {
+    padding: 10px 15px;
+    background-color: #4caf50; /* Vert pour l'action */
+    color: white;
+    border: none;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+#chatbot-form button:hover {
+    background-color: #43a047;
+}
+#chatbot-loading {
+    text-align: center;
+    padding: 5px;
+    color: #ffaa00;
+    font-size: 0.9rem;
+}

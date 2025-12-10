@@ -1,0 +1,15 @@
+/* Configuration du thème sombre selon le cahier des charges */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* Fond bleu nuit/noir */
+            color: #c9d1d9; /* Texte clair */
+        }
+        .text-accent {
+            color: #ffaa00; /* Orange/jaune pour l'accentuation */
+        }
+        .hover\:text-accent:hover {
+            color: #ffaa00;
+        }
+        .bg-accent {
+            background-color: #ffaa00;
+        }

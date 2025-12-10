@@ -4,45 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ title }}{% endblock title %} | AstroLearn</title>
-    <!-- Utilisation de Tailwind CSS pour un design responsive et moderne -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLMDJ8u7X6J2uF20TQQE89EFAvJ0zI3u83K3G1p6gPz9r8xHw/r0B/4eR5gO+vR0Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <style>
-        /* Configuration du thème sombre selon le cahier des charges */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0d1117; /* Fond bleu nuit/noir */
-            color: #c9d1d9; /* Texte clair */
-        }
-        .text-accent {
-            color: #ffaa00; /* Orange/jaune pour l'accentuation */
-        }
-        .bg-accent {
-            background-color: #ffaa00;
-        }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLMDJ8u7X6J2uF20TQQE89EFAvJ0zI3u83K3G1p6gPz9r8xHw/r0B/4eR5gO+vR0Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot_widget.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"> 
 
-    <!-- Barre de Navigation (Header) -->
+</head>
+
+<body class="min-h-screen flex flex-col">
     <header class="bg-gray-900 shadow-lg sticky top-0 z-50">
         <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <!-- Logo / Nom du Site -->
             <a href="{{ url_for('index') }}" class="flex items-center space-x-2">
                 <img src="{{ url_for('static', filename='images/logo.png') }}" alt="AstroLearn Logo" class="h-20 w-20">
                 <span class="text-2xl font-bold text-white">AstroLearn</span>
             </a>
 
-            <!-- Menu de Navigation (Desktop/Mobile) -->
             <div class="flex items-center space-x-6">
-                <!-- Liens principaux -->
-                <div class="hidden md:flex space-x-6">
+                <div class="flex space-x-6">
                     <a href="{{ url_for('index') }}" class="hover:text-accent transition duration-150">Catalogue</a>
-                    <a href="{{ url_for('chatbot') }}" class="hover:text-accent transition duration-150">AstroIA Chatbot</a>
                     <a href="{{ url_for('formulaire') }}" class="hover:text-accent transition duration-150">Sondage & Avis</a>
                 </div>
 
-                <!-- Section Admin -->
                 {% if session.get('is_admin') %}
                     <a href="{{ url_for('admin_dashboard') }}" class="text-sm font-semibold bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-full shadow-md transition duration-150">
                         Admin <i class="fas fa-lock-open ml-1"></i>
@@ -56,7 +39,6 @@
                     </a>
                 {% endif %}
 
-                <!-- Menu Mobile (Icône) - Implémentation JS non incluse, visuel seulement -->
                 <button class="md:hidden text-2xl text-white hover:text-accent">
                     <i class="fas fa-bars"></i>
                 </button>
@@ -64,7 +46,6 @@
         </nav>
     </header>
 
-    <!-- Affichage des Messages Flash -->
     <div class="container mx-auto px-4 pt-4">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -79,13 +60,10 @@
         {% endwith %}
     </div>
 
-    <!-- Contenu Principal -->
     <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Bloc où le contenu spécifique de chaque page sera injecté -->
         {% block content %}{% endblock content %}
     </main>
 
-    <!-- Pied de Page (Footer) -->
     <footer class="bg-gray-900 mt-auto">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-gray-400">
             <p>&copy; {{ now.year | default('2024') }} AstroLearn. Tous droits réservés.</p>
@@ -96,5 +74,33 @@
         </div>
     </footer>
 
+
+    <div id="chatbot-widget">
+        
+        <button id="chatbot-open-btn" title="Ouvrir le Chatbot IA">
+            <img src="{{ url_for('static', filename='images/chatbot.gif') }}" alt="logo chatbot"> 
+        </button>
+
+        <div id="chatbot-window" class="hidden">
+            <div class="chatbot-header">
+                AstroIA 
+                <button id="chatbot-close-btn">&times;</button>
+            </div>
+            <div id="chatbot-messages">
+                <div class="message ai-message">
+                    Bonjour ! Je suis l'AstroIA. Posez-moi des questions sur l'univers, les planètes ou les étoiles.
+                </div>
+            </div>
+            <form id="chatbot-form">
+                <input type="text" id="chatbot-input" placeholder="Posez votre question...">
+                <button type="submit" aria-label="Envoyer">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+            <div id="chatbot-loading" class="hidden">Chargement...</div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
