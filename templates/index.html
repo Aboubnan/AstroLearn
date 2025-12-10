@@ -2,15 +2,52 @@
 
 {% block content %}
 <div class="space-y-12">
+    <h1 class="text-5xl font-extrabold text-white text-center mb-8">
+        🌌 Catalogue des Corps Célestes
+    </h1>
+
+    <section class="bg-gray-800 p-6 rounded-xl shadow-2xl sticky top-0 z-10 mb-8 border border-accent/30">
+        <form method="GET" action="{{ url_for('index') }}" class="flex flex-col md:flex-row gap-4 items-end">
+            
+            <div class="flex-grow w-full md:w-auto">
+                <label for="search" class="block text-sm font-medium text-gray-300 mb-1">Rechercher par nom / description</label>
+                <input type="text" name="search_term" id="search" placeholder="Ex: Galaxie Andromède ou Nébuleuse d'Orion"
+                       class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-2 px-4 focus:ring-accent focus:border-accent"
+                       value="{{ request.args.get('search_term', '') }}">
+            </div>
+
+            <div class="w-full md:w-64">
+                <label for="category_id" class="block text-sm font-medium text-gray-300 mb-1">Filtrer par catégorie</label>
+                <select name="category_id" id="category_id"
+                        class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg py-2 px-4 focus:ring-accent focus:border-accent">
+                    
+                    <option value="">Toutes les catégories</option>
+                    
+                    {% set current_category_id = request.args.get('category_id', '') | int %}
+                    
+                    {% for cat in categories %}
+                        <option value="{{ cat.id_categorie }}" {% if cat.id_categorie == current_category_id %}selected{% endif %}>
+                            {{ cat.nom_categorie }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="w-full md:w-auto bg-accent hover:bg-accent-dark text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+                Appliquer les filtres
+            </button>
+        </form>
+    </section>
+
     <section>
         <h2 class="text-4xl font-bold text-accent mb-8 border-b border-gray-700 pb-3">
             Découvertes Récemment Cataloguées
         </h2>
 
         {% if objects %}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {% for obj in objects %}
-                    <div class="bg-gray-800 rounded-xl overflow-hidden shadow-xl">
+                    <div class="bg-gray-800 rounded-xl overflow-hidden shadow-xl hover:shadow-accent/50 transition duration-300">
                         <a href="{{ url_for('object_detail', object_id=obj.id_objet) }}">
                             <img src="{{ obj.url_image }}" alt="{{ obj.nom_fr }}" class="w-full h-48 object-cover">
                         </a>
@@ -18,6 +55,7 @@
                             <h3 class="text-2xl font-semibold text-white truncate">{{ obj.nom_fr }}</h3>
                             <p class="text-sm text-gray-500">{{ obj.nom_categorie }}</p>
                             <p class="text-gray-400 mt-2 text-sm line-clamp-3">{{ obj.extrait_description }}</p>
+                            
                             {% if obj.nom_categorie in ['Planète', 'Lune', 'Astéroïde'] %}
                                 <a href="{{ url_for('solar_system_detail', body_name=obj.nom_scientifique | default(obj.nom_fr)) }}" 
                                    class="text-accent text-sm mt-2 block hover:underline">
@@ -30,7 +68,7 @@
             </div>
         {% else %}
             <div class="text-center p-10 bg-gray-800 rounded-xl">
-                <p class="text-xl text-gray-400">Aucun objet céleste n'a encore été catalogué.</p>
+                <p class="text-xl text-gray-400">Aucun objet céleste ne correspond à vos critères de recherche/filtre.</p>
             </div>
         {% endif %}
     </section>

@@ -14,7 +14,7 @@ DATABASE_PATH = os.path.join(BASE_DIR, DATABASE_NAME)
 SECRET_KEY = os.environ.get('SECRET_KEY', 'une_cle_secrete_tres_faible_pour_le_dev')
 
 # Modèle d'IA utilisé pour le chatbot (à des fins de documentation)
-CHATBOT_MODEL = "gemini-2.5-flash-preview-09-2025"
+CHATBOT_MODEL = "gemini-2.5-flash"
 
 # Définir le port et l'hôte
 HOST = '127.0.0.1'
