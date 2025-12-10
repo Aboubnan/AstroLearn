@@ -15,26 +15,30 @@
 <body class="min-h-screen flex flex-col">
     <header class="bg-gray-900 shadow-lg sticky top-0 z-50">
         <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <a href="{{ url_for('index') }}" class="flex items-center space-x-2">
+            
+            <a href="{{ url_for('main_bp.index') }}" class="flex items-center space-x-2"> 
                 <img src="{{ url_for('static', filename='images/logo.png') }}" alt="AstroLearn Logo" class="h-20 w-20">
                 <span class="text-2xl font-bold text-white">AstroLearn</span>
             </a>
 
             <div class="flex items-center space-x-6">
                 <div class="flex space-x-6">
-                    <a href="{{ url_for('index') }}" class="hover:text-accent transition duration-150">Catalogue</a>
-                    <a href="{{ url_for('formulaire') }}" class="hover:text-accent transition duration-150">Sondage & Avis</a>
+                    
+                    <a href="{{ url_for('main_bp.index') }}" class="hover:text-accent transition duration-150">Catalogue</a>
+                    
+                    <a href="{{ url_for('main_bp.formulaire') }}" class="hover:text-accent transition duration-150">Sondage & Avis</a>
                 </div>
 
                 {% if session.get('is_admin') %}
-                    <a href="{{ url_for('admin_dashboard') }}" class="text-sm font-semibold bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-full shadow-md transition duration-150">
+                    <a href="{{ url_for('admin_bp.admin_dashboard') }}" class="text-sm font-semibold bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-full shadow-md transition duration-150">
                         Admin <i class="fas fa-lock-open ml-1"></i>
                     </a>
-                    <a href="{{ url_for('admin_logout') }}" class="text-sm text-red-400 hover:text-red-500 transition duration-150">
+                    
+                    <a href="{{ url_for('admin_bp.admin_logout') }}" class="text-sm text-red-400 hover:text-red-500 transition duration-150">
                         Déconnexion
                     </a>
                 {% else %}
-                    <a href="{{ url_for('admin_login') }}" class="text-sm font-semibold hover:text-accent transition duration-150">
+                    <a href="{{ url_for('admin_bp.admin_login') }}" class="text-sm font-semibold hover:text-accent transition duration-150">
                         Admin <i class="fas fa-lock ml-1"></i>
                     </a>
                 {% endif %}
@@ -66,7 +70,7 @@
 
     <footer class="bg-gray-900 mt-auto">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-gray-400">
-            <p>&copy; {{ now.year | default('2024') }} AstroLearn. Tous droits réservés.</p>
+            <p>&copy; {{ now.year | default('2020') }} AstroLearn. Tous droits réservés.</p>
             <p class="mt-2">
                 <a href="#" class="hover:text-accent transition duration-150">Confidentialité</a> | 
                 <a href="#" class="hover:text-accent transition duration-150">Conditions d'Utilisation</a>
