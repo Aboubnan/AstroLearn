@@ -9,19 +9,14 @@
     
     <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
         
-        <div class="mb-8 animate-float">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" 
-                 alt="AstroLearn Logo" 
-                 class="h-32 w-32 mx-auto drop-shadow-2xl">
-        </div>
         
         <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-white mb-6 animate-fade-in-up">
-            🌌 Explorez l'<span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-600">Univers</span>
+            Explorez l'<span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-600">Univers</span>
         </h1>
         
         <p class="text-xl sm:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto animate-fade-in-up animation-delay-200">
-            Découvrez les mystères du cosmos à travers notre catalogue de 
-            <span class="text-accent font-bold">400+ objets célestes</span>
+            Découvrez les mystères du cosmos à travers notre catalogue de <br>
+            <span class="text-accent font-bold">+ 400 objets célestes</span>
         </p>
         
         <!-- Statistiques -->
@@ -38,10 +33,6 @@
                 <div class="text-4xl font-bold text-purple-400 counter" data-target="100">0</div>
                 <div class="text-sm text-gray-400 mt-2">% Données NASA</div>
             </div>
-            <div class="bg-gray-800/60 backdrop-blur-sm p-6 rounded-xl border border-green-500/30 transform hover:scale-105 transition duration-300">
-                <div class="text-4xl font-bold text-green-400 counter" data-target="3">0</div>
-                <div class="text-sm text-gray-400 mt-2">APIs Intégrées</div>
-            </div>
         </div>
         
         <!-- Boutons CTA -->
@@ -50,7 +41,7 @@
                class="group relative px-8 py-4 bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold rounded-full shadow-2xl hover:shadow-accent/50 transform hover:scale-105 transition duration-300 overflow-hidden">
                 <span class="relative z-10 flex items-center justify-center">
                     <i class="fas fa-telescope mr-2"></i>
-                    Explorer le Catalogue
+                    Explorer l'Encyclopédie
                 </span>
                 <div class="absolute inset-0 bg-gradient-to-r from-pink-600 to-orange-500 opacity-0 group-hover:opacity-100 transition duration-300"></div>
             </a>
@@ -58,7 +49,7 @@
             <a href="{{ url_for('skymap.sky_map') }}" 
                class="px-8 py-4 bg-gray-800/80 backdrop-blur-sm text-white font-bold rounded-full border-2 border-accent hover:bg-accent hover:text-gray-900 transform hover:scale-105 transition duration-300 shadow-xl">
                 <i class="fas fa-globe mr-2"></i>
-                Carte 3D Interactive
+                Carte du Système Solaire
             </a>
         </div>
         
