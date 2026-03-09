@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from typing import Dict
 from flask import Flask
-from config import SECRET_KEY, HOST, PORT, DATABASE_PATH
+from config import SECRET_KEY, HOST, PORT, DATABASE_URL
 from model.database import initialize_database
 from controller.main_routes import main_bp
 from controller.admin_routes import admin_bp
@@ -15,12 +15,7 @@ from controller.skymap_routes import skymap_bp
 # 1. DATABASE INITIALIZATION
 # ----------------------------------------------------
 
-# Check if the database exists or needs creation/seeding
-if not os.path.exists(DATABASE_PATH):
-    print("🚀 Database not found. Initializing storage and seeding initial data...")
-    initialize_database()
-else:
-    print("✅ Database found. Starting application...")
+initialize_database()
 
 # ----------------------------------------------------
 # 2. FLASK APPLICATION SETUP

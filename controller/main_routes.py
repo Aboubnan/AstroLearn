@@ -9,7 +9,7 @@ from model.database import (
     get_object_by_id,
     get_all_categories,
     search_celestial_objects,
-    filter_celestial_objects
+    get_objects_by_category
 )
 
 # Blueprint creation
@@ -27,6 +27,41 @@ def index() -> str:
 
 @main_bp.route('/catalogue', methods=['GET'])
 def catalogue() -> str:
+    """Catalogue page with search and filtering logic."""
+    
+    search_term: str = request.args.get('search_term', '').strip()
+    category_id_str: str = request.args.get('category_id', '').strip()
+    
+    objects: List[Dict[str, Any]] = []
+    
+    # CAS 1 : Recherche par terme (prioritaire)
+    if search_term:
+        objects = search_celestial_objects(search_term)
+        # Si une catégorie est aussi sélectionnée, on affine en Python
+        if category_id_str and category_id_str.isdigit():
+            cat_id = int(category_id_str)
+            objects = [obj for obj in objects if obj.get('id_categorie') == cat_id]
+    
+    # CAS 2 : Filtrage par catégorie uniquement
+    elif category_id_str and category_id_str.isdigit():
+        objects = get_objects_by_category(int(category_id_str))
+    
+    # CAS 3 : On affiche tout
+    else:
+        objects = get_all_celestial_objects()
+    
+    categories = get_all_categories()
+    
+    if (search_term or category_id_str) and not objects:
+        flash("Aucun objet ne correspond à vos critères.", 'warning')
+    
+    return render_template(
+        'catalogue.html',
+        objects=objects,
+        categories=categories,
+        now=datetime.datetime.now(),
+        title="Catalogue - AstroLearn"
+    )
     """Catalogue page with search and filtering logic."""
     
     search_term: str = request.args.get('search_term', '').strip()
