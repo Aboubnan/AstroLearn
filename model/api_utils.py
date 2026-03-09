@@ -1,19 +1,20 @@
-# model/api_utils.py - VERSION GEMINI TESTÉE ET FONCTIONNELLE
+# model/api_utils.py
 
 import time
 import functools
 import requests
 import json
+from typing import Callable, Any, Optional, List, Dict, Union
 from config import API_KEY, NASA_IMAGES_URL
 from model.database import insert_solar_system_body
 
-# Configuration Gemini - URL CORRECTE (testée janvier 2026)
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+# Gemini Configuration - Correct URL for 2026
+GEMINI_API_URL: str = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 
-# --- Décorateur retry ---
-def retry_with_backoff(func):
+def retry_with_backoff(func: Callable) -> Callable:
+    """Decorator to retry a function call twice with a 2-second delay on failure."""
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         for attempt in range(2):
             try:
                 return func(*args, **kwargs)
@@ -24,36 +25,32 @@ def retry_with_backoff(func):
         return None
     return wrapper
 
-# --- Chatbot API ---
 @retry_with_backoff
-def call_hf_api(prompt, system_prompt=None):
+def call_hf_api(prompt: str, system_prompt: Optional[str] = None) -> str:
     """
-    Appelle Google Gemini API (gratuit avec clé).
+    Calls the Google Gemini API to generate content.
+    Returns a string containing the AI response or an error message.
     """
     
-    # Vérifier la clé
-    if not API_KEY or API_KEY.startswith('votre_') or len(API_KEY) < 30:
-        return """❌ Clé API Gemini manquante ou invalide.
-
-Pour utiliser le chatbot:
-1. Allez sur https://aistudio.google.com/app/apikey
-2. Créez une clé API (gratuit, 2 clics)
-3. Copiez-la dans config.py (ligne API_KEY)
-4. Relancez Flask
-
-En attendant, explorez le catalogue et la carte 3D ! 🌟"""
+    # API Key validation
+    if not API_KEY or API_KEY.startswith('your_') or len(API_KEY) < 30:
+        return (
+            "❌ Gemini API Key missing or invalid.\n\n"
+            "To use the chatbot:\n"
+            "1. Visit https://aistudio.google.com/app/apikey\n"
+            "2. Create an API key (free, 2 clicks)\n"
+            "3. Copy it into config.py (API_KEY line)\n"
+            "4. Restart Flask"
+        )
     
-    print(f"🚀 Appel Gemini Pro...")
+    print("🚀 Calling Gemini Pro API...")
     
     try:
-        # Construire le prompt complet
-        if system_prompt:
-            full_prompt = f"{system_prompt}\n\n{prompt}"
-        else:
-            full_prompt = prompt
+        # Build the full prompt including instructions
+        full_prompt: str = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
         
-        # Payload Gemini
-        payload = {
+        # Gemini API Payload
+        payload: Dict[str, Any] = {
             "contents": [{
                 "parts": [{"text": full_prompt}]
             }],
@@ -63,104 +60,125 @@ En attendant, explorez le catalogue et la carte 3D ! 🌟"""
             }
         }
         
-        # URL avec clé
-        url = f"{GEMINI_API_URL}?key={API_KEY}"
-        headers = {"Content-Type": "application/json"}
+        url: str = f"{GEMINI_API_URL}?key={API_KEY}"
+        headers: Dict[str, str] = {"Content-Type": "application/json"}
         
-        print(f"📤 Envoi...")
+        print("📤 Sending request...")
         response = requests.post(url, headers=headers, json=payload, timeout=30)
-        status = response.status_code
+        status: int = response.status_code
         
-        print(f"📥 Status: {status}")
+        print(f"📥 Response Status: {status}")
         
-        # Gestion des erreurs
+        # Error handling based on HTTP status codes
         if status == 429:
-            return "⚠️ Quota temporairement dépassé. Attendez 1 minute et réessayez."
+            return "⚠️ Quota temporarily exceeded. Please wait 1 minute."
         if status == 401:
-            return "❌ Clé API invalide. Vérifiez votre clé dans config.py"
+            return "❌ Invalid API Key. Please check config.py."
         if status == 400:
             try:
-                err = response.json().get('error', {}).get('message', '')
-                return f"❌ Erreur: {err}"
-            except:
-                return "❌ Erreur de requête. Reformulez votre question."
+                error_msg: str = response.json().get('error', {}).get('message', '')
+                return f"❌ Request Error: {error_msg}"
+            except Exception:
+                return "❌ Request error. Please rephrase your question."
         
         if status != 200:
-            return f"❌ Erreur API ({status}). Réessayez."
+            return f"❌ API Error ({status}). Please try again."
         
-        # Parser réponse
-        result = response.json()
+        # Parse JSON response
+        result: Dict[str, Any] = response.json()
         
         if 'candidates' in result and len(result['candidates']) > 0:
-            candidate = result['candidates'][0]
-            
+            candidate: Dict[str, Any] = result['candidates'][0]
             if 'content' in candidate:
-                parts = candidate['content'].get('parts', [])
+                parts: List[Dict[str, str]] = candidate['content'].get('parts', [])
                 if parts:
-                    text = parts[0].get('text', '').strip()
+                    text: str = parts[0].get('text', '').strip()
                     if text:
-                        print(f"✅ Réponse ({len(text)} car.)")
+                        print(f"✅ Response received ({len(text)} chars)")
                         return text
         
-        return "❌ Réponse vide. Reformulez votre question."
+        return "❌ Empty response. Please rephrase your question."
         
     except requests.exceptions.Timeout:
-        return "⏱️ Timeout. Réessayez."
+        return "⏱️ Request timeout. Please try again."
     except Exception as e:
-        print(f"❌ Erreur: {e}")
-        return f"❌ Erreur: {str(e)}"
+        print(f"❌ Error in call_hf_api: {e}")
+        return f"❌ Error: {str(e)}"
 
-# --- NASA API (INCHANGÉ) ---
+
 @retry_with_backoff
-def get_paged_nasa_search_data(search_term, page_number):
-    url = f"{NASA_IMAGES_URL}?q={search_term}&media_type=image&page={page_number}&page_size=100"
+def get_paged_nasa_search_data(search_term: str, page_number: int) -> Optional[List[Dict[str, Any]]]:
+    """
+    Fetches image metadata from the NASA Images API for a specific page.
+    """
+    url: str = f"{NASA_IMAGES_URL}?q={search_term}&media_type=image&page={page_number}&page_size=100"
     try:
         response = requests.get(url, timeout=15)
         response.raise_for_status()
-        data = response.json()
-        items = data.get('collection', {}).get('items')
+        data: Dict[str, Any] = response.json()
+        items: List[Dict[str, Any]] = data.get('collection', {}).get('items', [])
+        
         if items:
-            results = []
+            results: List[Dict[str, Any]] = []
             for item in items:
-                metadata = item.get('data', [{}])[0]
+                metadata: Dict[str, Any] = item.get('data', [{}])[0]
                 results.append({
                     "nasa_id": metadata.get('nasa_id', 'N/A'),
-                    "title": metadata.get('title', 'Titre Inconnu'),
-                    "description": metadata.get('description', 'Description non disponible'),
+                    "title": metadata.get('title', 'Unknown Title'),
+                    "description": metadata.get('description', 'No description available'),
                     "keywords": metadata.get('keywords', []),
                 })
             return results
         return None
-    except:
+    except Exception as e:
+        print(f"❌ NASA API Error: {e}")
         return None
 
-def ingest_solar_system_data_paged(search_term, max_pages):
-    total_success_count = 0
-    translation_map = {
+
+def ingest_solar_system_data_paged(search_term: str, max_pages: int) -> int:
+    """
+    Orchestrates data ingestion from NASA and insertion into the local database.
+    Translates major celestial body names and handles duplicates.
+    """
+    total_success_count: int = 0
+    translation_map: Dict[str, str] = {
         'Sun': 'Soleil', 'Mercury': 'Mercure', 'Venus': 'Vénus', 'Earth': 'Terre', 
         'Mars': 'Mars', 'Jupiter': 'Jupiter', 'Saturn': 'Saturne', 'Uranus': 'Uranus', 
         'Neptune': 'Neptune', 'Pluto': 'Pluton', 'Moon': 'Lune', 'Ceres': 'Cérès'
     }
+
     for page in range(1, max_pages + 1):
-        data = get_paged_nasa_search_data(search_term, page)
+        data: Optional[List[Dict[str, Any]]] = get_paged_nasa_search_data(search_term, page)
         if not data:
             break
+            
         for item in data:
             try:
-                nasa_id = item.get('nasa_id')
-                title = item.get('title', 'Objet Inconnu')
-                description_text = item.get('description', "Description non disponible.")
-                keywords = item.get('keywords', ['Objet Céleste'])
-                name_en = title
-                name_fr = translation_map.get(title, title)
-                body_type = keywords[0].capitalize() if keywords else 'Objet Céleste'
-                image_url = f"https://images-assets.nasa.gov/image/{nasa_id}/{nasa_id}~thumb.jpg"
-                result = insert_solar_system_body(
-                    name_fr=name_fr, name_en=name_en, description=description_text,
-                    body_type=body_type, mass_value=None, density=None, image_url=image_url
+                nasa_id: str = item.get('nasa_id', '')
+                title: str = item.get('title', 'Unknown Object')
+                description_text: str = item.get('description', "No description available.")
+                keywords: List[str] = item.get('keywords', ['Celestial Object'])
+                
+                name_en: str = title
+                name_fr: str = translation_map.get(title, title)
+                body_type: str = keywords[0].capitalize() if keywords else 'Celestial Object'
+                image_url: str = f"https://images-assets.nasa.gov/image/{nasa_id}/{nasa_id}~thumb.jpg"
+                
+                # Database insertion call
+                result: bool = insert_solar_system_body(
+                    name_fr=name_fr, 
+                    name_en=name_en, 
+                    description=description_text,
+                    body_type=body_type, 
+                    mass_value=None, 
+                    density=None, 
+                    image_url=image_url
                 )
+                
                 if result:
                     total_success_count += 1
-            except:
-                pass
+            except Exception as e:
+                print(f"❌ Error ingesting item {item.get('nasa_id')}: {e}")
+                continue
+                
     return total_success_count

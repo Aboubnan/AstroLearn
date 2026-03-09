@@ -1,55 +1,56 @@
-# app.py - Point d'entrée de l'application (Maintenant le "Contrôleur d'application")
+# app.py - Application Entry Point
 
 import os
-from flask import Flask, render_template, request, jsonify
+from datetime import datetime
+from typing import Dict
+from flask import Flask
 from config import SECRET_KEY, HOST, PORT, DATABASE_PATH
-from model.database import initialize_database # Import ajusté
+from model.database import initialize_database
 from controller.main_routes import main_bp
 from controller.admin_routes import admin_bp
 from controller.chatbot_routes import chatbot_bp
 from controller.skymap_routes import skymap_bp
-from datetime import datetime # NOUVEL IMPORT
 
 # ----------------------------------------------------
-# 1. INITIALISATION DE LA BASE DE DONNÉES
+# 1. DATABASE INITIALIZATION
 # ----------------------------------------------------
 
+# Check if the database exists or needs creation/seeding
 if not os.path.exists(DATABASE_PATH):
-    print("Base de données non trouvée. Initialisation en cours.")
+    print("🚀 Database not found. Initializing storage and seeding initial data...")
     initialize_database()
 else:
-    print("Base de données trouvée. Démarrage de l'application.")
+    print("✅ Database found. Starting application...")
 
 # ----------------------------------------------------
-# 2. INITIALISATION DE L'APPLICATION FLASK
+# 2. FLASK APPLICATION SETUP
 # ----------------------------------------------------
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
-# ----------------------------------------
-    # NOUVEAU : CONTEXTE TEMPLATE POUR L'ANNÉE ACTUELLE
-# ----------------------------------------
-
 @app.context_processor
-def inject_current_year():
-    # Cette fonction est appelée avant chaque rendu de template
-    return {'current_year': datetime.utcnow().year} # Renvoie l'année UTC
+def inject_current_year() -> Dict[str, int]:
+    """
+    Injects the current year into all templates globally.
+    Allows using {{ current_year }} in any HTML file.
+    """
+    return {'current_year': datetime.utcnow().year}
 
 # ----------------------------------------------------
-# 3. ENREGISTREMENT DES BLUEPRINTS (CONTROLLERS)
+# 3. BLUEPRINT REGISTRATION (CONTROLLERS)
 # ----------------------------------------------------
 
+# Modular routing for better maintainability
 app.register_blueprint(main_bp)
 app.register_blueprint(admin_bp)
-app.register_blueprint(chatbot_bp) # Enregistrement des routes API du chatbot
+app.register_blueprint(chatbot_bp)
 app.register_blueprint(skymap_bp)
 
-
 # ----------------------------------------------------
-# 4. DÉMARRAGE DE L'APPLICATION
+# 4. APPLICATION LAUNCH
 # ----------------------------------------------------
 
 if __name__ == '__main__':
-    # Le 'debug=True' est important pour le rechargement
+    # Debug mode is enabled for development (hot-reloading)
     app.run(debug=True, host=HOST, port=PORT)

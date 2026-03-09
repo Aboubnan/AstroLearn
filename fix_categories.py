@@ -1,125 +1,123 @@
-# fix_categories.py - Script de correction des catégories basé sur les mots-clés
+# fix_categories.py - Category Correction Script based on Keywords
 
 import sqlite3
+from typing import Dict, List, Optional, Any
 from config import DATABASE_PATH
 
-def fix_all_categories():
-    """Recatégorise tous les objets basés sur les mots-clés dans leurs noms."""
-    conn = sqlite3.connect(DATABASE_PATH)
+def get_category_mapping(name: str) -> str:
+    """
+    Business logic to determine the correct category based on name keywords.
+    Returns the category name as a string.
+    """
+    n: str = name.lower()
+    
+    # ASTEROIDS & COMETS
+    if any(w in n for w in ['asteroid', 'comet', 'astéroïde', 'comète', 'meteor']):
+        return 'Astéroïde'
+    
+    # GALAXIES
+    if any(w in n for w in ['galaxy', 'galaxie', 'andromeda', 'milky way', 'voie lactée']):
+        return 'Galaxie'
+    
+    # NEBULAE
+    if any(w in n for w in ['nebula', 'nébuleuse', 'orion nebula', 'helix']):
+        return 'Nébuleuse'
+    
+    # PLANETS
+    planets: List[str] = [
+        'mercury', 'mercure', 'venus', 'vénus', 'earth', 'terre', 'mars', 
+        'jupiter', 'saturn', 'saturne', 'uranus', 'neptune', 'pluto', 'pluton'
+    ]
+    if any(p in n for p in planets):
+        return 'Planète'
+    
+    # MOONS
+    moons: List[str] = [
+        'moon', 'lune', 'io', 'europa', 'europe', 'ganymede', 'ganymède', 
+        'callisto', 'titan', 'enceladus', 'encelade', 'triton', 'phobos', 'deimos'
+    ]
+    if any(m in n for m in moons) or 'satellite' in n:
+        return 'Lune'
+    
+    # CLUSTERS
+    if any(w in n for w in ['cluster', 'amas', 'globular']):
+        return 'Amas Globulaire'
+    
+    # GENERAL SOLAR SYSTEM
+    if 'solar system' in n:
+        return 'Planète Externe'
+    
+    # DEFAULT FALLBACK
+    return 'Planète'
+
+def fix_all_categories() -> None:
+    """Recategorizes all objects based on keywords in their names."""
+    conn: sqlite3.Connection = sqlite3.connect(DATABASE_PATH)
     conn.row_factory = sqlite3.Row
     
-    # Récupérer les IDs des catégories
-    categories = {}
-    for cat in conn.execute("SELECT id_categorie, nom_categorie FROM CATEGORIE").fetchall():
-        categories[cat['nom_categorie']] = cat['id_categorie']
-    
-    # Récupérer tous les objets
-    objets = conn.execute("SELECT id_objet, nom_fr, nom_scientifique FROM OBJET_CELESTE").fetchall()
-    
-    corrections = {
-        'Galaxie': 0,
-        'Nébuleuse': 0,
-        'Planète': 0,
-        'Lune': 0,
-        'Astéroïde': 0,
-        'Amas Globulaire': 0,
-        'Planète Externe': 0
-    }
-    
-    for obj in objets:
-        nom_complet = f"{obj['nom_fr']} {obj['nom_scientifique'] or ''}".lower()
-        nouvelle_cat = None
+    try:
+        # 1. Fetch category IDs into a dictionary {Name: ID}
+        categories: Dict[str, int] = {}
+        for cat in conn.execute("SELECT id_categorie, nom_categorie FROM CATEGORIE").fetchall():
+            categories[cat['nom_categorie']] = cat['id_categorie']
         
-        # ASTÉROÏDES & COMÈTES (très fréquent dans vos données)
-        if any(word in nom_complet for word in ['asteroid', 'comet', 'astéroïde', 'comète', 'meteor']):
-            nouvelle_cat = 'Astéroïde'
+        # 2. Fetch all objects
+        objects: List[sqlite3.Row] = conn.execute(
+            "SELECT id_objet, nom_fr, nom_scientifique FROM OBJET_CELESTE"
+        ).fetchall()
         
-        # GALAXIES
-        elif any(word in nom_complet for word in ['galaxy', 'galaxie', 'andromeda', 'milky way', 'voie lactée']):
-            nouvelle_cat = 'Galaxie'
+        corrections_stats: Dict[str, int] = {k: 0 for k in categories.keys()}
         
-        # NÉBULEUSES
-        elif any(word in nom_complet for word in ['nebula', 'nébuleuse', 'orion nebula', 'helix']):
-            nouvelle_cat = 'Nébuleuse'
+        # 3. Process each object
+        print("🔄 Processing objects...")
+        for obj in objects:
+            full_name: str = f"{obj['nom_fr']} {obj['nom_scientifique'] or ''}"
+            target_cat_name: str = get_category_mapping(full_name)
+            
+            if target_cat_name in categories:
+                conn.execute(
+                    "UPDATE OBJET_CELESTE SET fk_id_categorie = ? WHERE id_objet = ?",
+                    (categories[target_cat_name], obj['id_objet'])
+                )
+                corrections_stats[target_cat_name] += 1
         
-        # PLANÈTES (noms exacts)
-        elif any(planet in nom_complet for planet in [
-            'mercury', 'mercure', 'venus', 'vénus', 
-            'earth', 'terre', 'mars', 
-            'jupiter', 'saturn', 'saturne', 
-            'uranus', 'neptune', 'pluto', 'pluton'
-        ]):
-            nouvelle_cat = 'Planète'
+        conn.commit()
         
-        # LUNES (noms exacts et mots-clés)
-        elif any(moon in nom_complet for moon in [
-            'moon', 'lune', 'io', 'europa', 'europe', 
-            'ganymede', 'ganymède', 'callisto', 
-            'titan', 'enceladus', 'encelade', 
-            'triton', 'phobos', 'deimos'
-        ]) or 'satellite' in nom_complet:
-            nouvelle_cat = 'Lune'
+        # 4. Display Results
+        print("\n" + "="*40)
+        print("✅ RECATEGORIZATION COMPLETE")
+        print("="*40)
+        for cat, count in corrections_stats.items():
+            print(f" {cat:20} : {count:3} objects updated")
         
-        # AMAS GLOBULAIRES
-        elif any(word in nom_complet for word in ['cluster', 'amas', 'globular']):
-            nouvelle_cat = 'Amas Globulaire'
+        # 5. New Distribution Stats
+        print("\n📊 NEW DISTRIBUTION")
+        print("-" * 40)
+        distribution = conn.execute("""
+            SELECT c.nom_categorie, COUNT(o.id_objet) as nb
+            FROM CATEGORIE c
+            LEFT JOIN OBJET_CELESTE o ON c.id_categorie = o.fk_id_categorie
+            GROUP BY c.id_categorie
+            ORDER BY nb DESC
+        """).fetchall()
         
-        # SYSTÈME SOLAIRE GÉNÉRAL (si "solar system" sans autre mot-clé)
-        elif 'solar system' in nom_complet and nouvelle_cat is None:
-            nouvelle_cat = 'Planète Externe'
-        
-        # PAR DÉFAUT (laisser en Planète)
-        else:
-            nouvelle_cat = 'Planète'
-        
-        # Mettre à jour la catégorie
-        if nouvelle_cat and nouvelle_cat in categories:
-            conn.execute(
-                "UPDATE OBJET_CELESTE SET fk_id_categorie = ? WHERE id_objet = ?",
-                (categories[nouvelle_cat], obj['id_objet'])
-            )
-            corrections[nouvelle_cat] += 1
-    
-    conn.commit()
-    
-    # Afficher le résultat
-    print("\n" + "="*60)
-    print("✅ RECATÉGORISATION TERMINÉE")
-    print("="*60)
-    for cat, count in corrections.items():
-        print(f"  {cat:20} : {count:3} objets")
-    print("="*60)
-    
-    # Afficher la nouvelle répartition
-    print("\n📊 NOUVELLE RÉPARTITION")
-    print("-"*60)
-    repartition = conn.execute("""
-        SELECT c.nom_categorie, COUNT(o.id_objet) as nb
-        FROM CATEGORIE c
-        LEFT JOIN OBJET_CELESTE o ON c.id_categorie = o.fk_id_categorie
-        GROUP BY c.id_categorie
-        ORDER BY nb DESC
-    """).fetchall()
-    
-    for r in repartition:
-        print(f"  {r['nom_categorie']:20} → {r['nb']} objets")
-    
-    conn.close()
+        for row in distribution:
+            print(f" {row['nom_categorie']:20} → {row['nb']} objects")
+
+    except sqlite3.Error as e:
+        print(f"❌ Database error: {e}")
+    finally:
+        conn.close()
 
 if __name__ == '__main__':
-    print("\n🔧 CORRECTION AUTOMATIQUE DES CATÉGORIES")
-    print("="*60)
-    print("Ce script va recatégoriser vos 420 objets basés sur")
-    print("les mots-clés dans leurs noms (asteroid, galaxy, etc.)")
-    print("="*60)
+    print("\n🔧 CATEGORY REPAIR UTILITY")
+    print("="*40)
+    print("This script will re-classify all objects based on internal keywords.")
     
-    response = input("\n➡️  Lancer la correction ? (oui/non) : ")
+    user_input: str = input("\n➡️ Start correction? (y/n): ")
     
-    if response.lower() in ['oui', 'o', 'yes', 'y']:
-        print("\n🔄 Correction en cours...\n")
+    if user_input.lower() in ['y', 'yes', 'o', 'oui']:
         fix_all_categories()
-        print("\n✅ Terminé ! Relancez votre application Flask.")
-        print("💡 Testez maintenant les filtres par catégorie.")
+        print("\n✨ Done! You can now restart Flask and test your filters.")
     else:
-        print("\n❌ Annulé.")
-    
+        print("\n❌ Operation cancelled.")
