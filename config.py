@@ -1,36 +1,32 @@
-# Fichier de configuration pour centraliser les chemins et constantes
+# config.py - Configuration AstroLearn
+
 import os
-import os # Gardez cet import si vous utilisez os.environ.get
 
-# Nom du fichier de la base de données SQLite
+# ==================== BASE DE DONNÉES ====================
 DATABASE_NAME = "astrolearn.db"
-
-# Chemin absolu du dossier du projet
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Chemin complet vers le fichier de la base de données
 DATABASE_PATH = os.path.join(BASE_DIR, DATABASE_NAME)
 
-# Clé secrète pour Flask (à changer en production !)
+# ==================== FLASK ====================
 SECRET_KEY = os.environ.get('SECRET_KEY', 'une_cle_secrete_tres_faible_pour_le_dev')
-
-# Modèle d'IA utilisé pour le chatbot (à des fins de documentation)
-CHATBOT_MODEL = "gemini-2.5-flash"
-
-# Définir le port et l'hôte
 HOST = '127.0.0.1'
 PORT = 5000
 
-# ---------------------------------------------
-# CONSTANTES API (AJOUTÉES POUR LE CHATBOT ET L'INGESTION)
-# ---------------------------------------------
+# ==================== API GEMINI ====================
+# Clé API Gemini (configurée et prête à l'emploi)
+API_KEY = "AIzaSyD0emeGIX-S9JkCYgQa3pOGbCSNF5NS5xQ"
 
-# TOKEN HUGGING FACE
-# REMPLACEZ 'hf_votre_vrai_token_ici' par votre jeton d'accès réel (commence par hf_)
-API_KEY = "AIzaSyCO3vs27jdpF7BDB0GZoFznwehzcUeHXoA" 
-
-# NOUVELLE URL GEMINI API (point d'accès standard)
+# URL de l'API Gemini 2.5 Flash (le meilleur modèle disponible)
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 
-# URL pour l'API NASA Image and Video Library
+# Modèle utilisé (documentation)
+CHATBOT_MODEL = "gemini-2.5-flash"
+
+# ==================== API NASA ====================
 NASA_IMAGES_URL = "https://images-api.nasa.gov/search"
+
+# ==================== NOTES ====================
+# Limites gratuites Gemini:
+# - 60 requêtes par minute
+# - 1500 requêtes par jour
+# - Pas de carte bancaire requise

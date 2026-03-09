@@ -23,10 +23,12 @@
 
             <div class="flex items-center space-x-6">
                 <div class="flex space-x-6">
-                    <a href="{{ url_for('skymap.sky_map') }}" class="hover:text-accent transition duration-150">Carte du Ciel</a>
+                    <a href="{{ url_for('main_bp.index') }}" class="hover:text-accent transition duration-150">Accueil</a>
 
-                    <a href="{{ url_for('main_bp.index') }}" class="hover:text-accent transition duration-150">Catalogue</a>
-                    
+                    <a href="{{ url_for('main_bp.catalogue') }}" class="hover:text-accent transition duration-150">Catalogue</a>
+
+                    <a href="{{ url_for('skymap.sky_map') }}" class="hover:text-accent transition duration-150">Carte du Ciel</a>
+                   
                     <a href="{{ url_for('main_bp.formulaire') }}" class="hover:text-accent transition duration-150">Sondage & Avis</a>
                 </div>
 
@@ -79,33 +81,46 @@
         </div>
     </footer>
 
-
+    <!-- ==================== CHATBOT WIDGET AMÉLIORÉ ==================== -->
     <div id="chatbot-widget">
-        
-        <button id="chatbot-open-btn" title="Ouvrir le Chatbot IA">
-            <img src="{{ url_for('static', filename='images/chatbot.gif') }}" alt="logo chatbot"> 
+        <!-- Bouton d'ouverture flottant -->
+        <button id="chatbot-open-btn" title="Discuter avec AstroIA">
+            <img src="{{ url_for('static', filename='images/chatbot.gif') }}" alt="AstroIA"> 
         </button>
 
+        <!-- Fenêtre du chatbot -->
         <div id="chatbot-window" class="hidden">
-            <div class="chatbot-header">
+            <!-- En-tête -->
+            <div class="chatbot-header" style="position: relative;">
                 AstroIA 
+                <button id="chatbot-clear-btn" title="Effacer l'historique">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
                 <button id="chatbot-close-btn">&times;</button>
             </div>
+
+            <!-- Zone de messages -->
             <div id="chatbot-messages">
-                <div class="message ai-message">
-                    Bonjour ! Je suis l'AstroIA. Posez-moi des questions sur l'univers, les planètes ou les étoiles.
-                </div>
+                <!-- Les messages seront ajoutés dynamiquement par JavaScript -->
             </div>
+
+            <!-- Formulaire de saisie -->
             <form id="chatbot-form">
-                <input type="text" id="chatbot-input" placeholder="Posez votre question...">
-                <button type="submit" aria-label="Envoyer">
+                <input 
+                    type="text" 
+                    id="chatbot-input" 
+                    placeholder="Posez votre question sur l'astronomie..."
+                    autocomplete="off"
+                    maxlength="500"
+                >
+                <button type="submit" aria-label="Envoyer" title="Envoyer (Entrée)">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </form>
-            <div id="chatbot-loading" class="hidden">Chargement...</div>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
