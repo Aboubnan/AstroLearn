@@ -3,7 +3,7 @@
 {% block content %}
 
 <!-- HERO SECTION -->
-<section id="hero" class="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-gray-900 via-blue-900 to-gray-900">
+<section id="hero" class="relative py-10 lg:py-32 flex items-center justify-center overflow-hidden bg-gradient-to-b from-gray-900 via-blue-900 to-gray-900">
     <canvas id="particles-canvas" class="absolute inset-0 w-full h-full"></canvas>
     <div class="absolute inset-0 bg-gradient-to-b from-transparent via-gray-900/50 to-gray-900"></div>
     
@@ -20,7 +20,7 @@
         </p>
         
         <!-- Statistiques -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12 animate-fade-in-up animation-delay-400">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-6 mb-12 animate-fade-in-up animation-delay-400">
             <div class="bg-gray-800/60 backdrop-blur-sm p-6 rounded-xl border border-accent/30 transform hover:scale-105 transition duration-300">
                 <div class="text-4xl font-bold text-accent counter" data-target="420">0</div>
                 <div class="text-sm text-gray-400 mt-2">Objets Célestes</div>
@@ -47,22 +47,16 @@
             </a>
             
             <a href="{{ url_for('skymap.sky_map') }}" 
-               class="px-8 py-4 bg-gray-800/80 backdrop-blur-sm text-white font-bold rounded-full border-2 border-accent hover:bg-accent hover:text-gray-900 transform hover:scale-105 transition duration-300 shadow-xl">
+               class="px-8 py-4 bg-gray-800/80 backdrop-blur-sm text-white font-bold rounded-full border-2 border-accent hover:bg-accent hover:text-white-900 transform hover:scale-105 transition duration-300 shadow-xl">
                 <i class="fas fa-globe mr-2"></i>
                 Carte du Système Solaire
-            </a>
-        </div>
-        
-        <div class="animate-bounce">
-            <a href="#features" class="inline-block text-gray-400 hover:text-accent transition">
-                <i class="fas fa-chevron-down text-3xl"></i>
             </a>
         </div>
     </div>
 </section>
 
 <!-- SECTION FONCTIONNALITÉS -->
-<section id="features" class="py-20 bg-gray-900">
+<section id="features" class="py-10 bg-gray-900">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 class="text-4xl font-bold text-center text-white mb-4">
             ✨ Fonctionnalités Innovantes
