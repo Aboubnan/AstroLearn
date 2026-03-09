@@ -1,184 +1,154 @@
-# controller/chatbot_routes.py - VERSION AMÉLIORÉE
+# controller/chatbot_routes.py
 
-from flask import Blueprint, request, jsonify
+from typing import List, Dict, Any, Optional, Tuple, Union
+from flask import Blueprint, request, jsonify, Response
 from model.api_utils import call_hf_api
 
-# Création du Blueprint
+# Blueprint creation
 chatbot_bp = Blueprint('chatbot_bp', __name__)
 
 @chatbot_bp.route('/api/chatbot', methods=['POST'])
-def api_chatbot():
+def api_chatbot() -> Union[Response, Tuple[Response, int]]:
     """
-    Point de terminaison API pour le chatbot avec support de l'historique de conversation.
+    API endpoint for the chatbot with conversation history support.
     
-    Reçoit:
-        - message (str): Message de l'utilisateur
-        - history (list, optionnel): Historique des 5 derniers messages
+    Expects JSON:
+        - message (str): User's input message
+        - history (list, optional): History of the last 5 messages
     
-    Retourne:
-        - response (str): Réponse de l'IA
-        - error (str): Message d'erreur en cas de problème
+    Returns:
+        - response (str): AI-generated answer
+        - error (str): Error message if applicable
     """
     
     try:
-        # Vérification du format JSON
+        # Check JSON format
         if not request.is_json:
-            return jsonify({"error": "Format JSON requis"}), 400
+            return jsonify({"error": "JSON format required"}), 400
 
-        data = request.get_json()
-        user_message = data.get('message', '').strip()
-        conversation_history = data.get('history', [])
+        data: Optional[Dict[str, Any]] = request.get_json()
+        if data is None:
+            return jsonify({"error": "No data provided"}), 400
 
-        # Validation du message
+        user_message: str = data.get('message', '').strip()
+        conversation_history: List[Dict[str, str]] = data.get('history', [])
+
+        # Message validation
         if not user_message:
-            return jsonify({"error": "Message vide"}), 400
+            return jsonify({"error": "Empty message"}), 400
         
         if len(user_message) > 500:
-            return jsonify({"error": "Message trop long (max 500 caractères)"}), 400
+            return jsonify({"error": "Message too long (max 500 chars)"}), 400
         
-        # Construction du prompt système enrichi
-        system_prompt = """Tu es AstroIA, un assistant virtuel expert en astronomie et astrophysique.
+        # System prompt definition (Professional Roleplay)
+        system_prompt: str = """You are AstroIA, a virtual assistant expert in astronomy and astrophysics.
 
-RÔLE:
-- Réponds aux questions sur l'univers, les planètes, les étoiles, les galaxies, etc.
-- Utilise un langage clair et pédagogique adapté à tous les niveaux
-- Sois enthousiaste et passionné par l'astronomie
+ROLE:
+- Answer questions about the universe, planets, stars, galaxies, etc.
+- Use clear and educational language suitable for all levels.
+- Be enthusiastic and passionate about astronomy.
 
-RÈGLES:
-- Réponds TOUJOURS en français
-- Sois concis (maximum 3-4 phrases pour les réponses simples)
-- Utilise des analogies simples pour les concepts complexes
-- Si tu ne sais pas, dis-le honnêtement
-- Ne mentionne jamais que tu es une IA, un modèle ou un bot
-- Ne parle pas de tes limitations techniques
+RULES:
+- ALWAYS answer in French.
+- Be concise (maximum 3-4 sentences for simple answers).
+- Use simple analogies for complex concepts.
+- If you don't know, say so honestly.
+- Never mention that you are an AI, a model, or a bot.
+- Do not talk about your technical limitations.
 
 FORMAT:
-- Utilise des retours à la ligne pour aérer les réponses longues
-- Mets en gras (**texte**) les termes importants
-- Utilise des émojis occasionnels pour rendre la conversation vivante (🌟, 🪐, ✨, etc.)
-
-EXEMPLES DE RÉPONSES:
-Question: "Quelle est la température du Soleil ?"
-Réponse: "Le **Soleil** a une température de surface d'environ **5 500°C** ☀️. Mais attention, son cœur est bien plus chaud : **15 millions de degrés** ! C'est là que se produit la fusion nucléaire qui nous donne lumière et chaleur."
-
-Question: "C'est quoi un trou noir ?"
-Réponse: "Un **trou noir** est une région de l'espace où la gravité est si intense que même la lumière ne peut s'en échapper 🌑. Imagine un aspirateur cosmique ultra-puissant ! Ils se forment généralement après l'effondrement d'étoiles massives."
+- Use line breaks to air out long responses.
+- Use bold (**text**) for important terms.
+- Use occasional emojis (🌟, 🪐, ✨, etc.) to make the conversation lively.
 """
 
-        # Construction du prompt avec contexte de conversation
+        # Building prompt with conversation context
+        full_prompt: str = ""
         if conversation_history and len(conversation_history) > 0:
-            # Créer un contexte à partir des derniers messages
-            context_messages = []
-            for msg in conversation_history[-5:]:  # Derniers 5 messages max
-                role = msg.get('role', '')
-                content = msg.get('content', '')
+            # Create context from the last 5 messages
+            context_messages: List[str] = []
+            for msg in conversation_history[-5:]:
+                role: str = msg.get('role', '')
+                content: str = msg.get('content', '')
                 if role == 'user':
-                    context_messages.append(f"Utilisateur: {content}")
+                    context_messages.append(f"User: {content}")
                 elif role == 'assistant':
-                    context_messages.append(f"Tu as répondu: {content}")
+                    context_messages.append(f"You replied: {content}")
             
-            context = "\n".join(context_messages)
-            full_prompt = f"""CONTEXTE DE LA CONVERSATION:
-{context}
-
-NOUVELLE QUESTION:
-{user_message}
-
-Réponds en tenant compte du contexte de la conversation précédente."""
+            context: str = "\n".join(context_messages)
+            full_prompt = (
+                f"CONVERSATION CONTEXT:\n{context}\n\n"
+                f"NEW QUESTION:\n{user_message}\n\n"
+                "Answer while taking the previous context into account."
+            )
         else:
             full_prompt = user_message
         
-        # Appel à l'API Gemini
-        ai_response_text = call_hf_api(full_prompt, system_prompt)
+        # Calling the AI API (Gemini via api_utils)
+        ai_response_text: Optional[str] = call_hf_api(full_prompt, system_prompt)
         
-        # Gestion des erreurs provenant de l'API
+        # Handling API errors
         if not ai_response_text:
             return jsonify({
-                "error": "L'IA n'a pas pu générer de réponse. Veuillez réessayer."
+                "error": "The AI could not generate a response. Please try again."
             }), 500
         
-        # Vérification des messages d'erreur dans la réponse
-        error_keywords = ["Erreur", "Token", "Invalid", "Failed", "bloquée", "filtre de sécurité"]
+        # Security check for error messages in AI response
+        error_keywords: List[str] = [
+            "Error", "Token", "Invalid", "Failed", "blocked", "safety filter"
+        ]
         if any(keyword in ai_response_text for keyword in error_keywords):
             return jsonify({
                 "error": ai_response_text
             }), 500
         
-        # Nettoyage de la réponse
+        # Cleaning the response
         ai_response_text = ai_response_text.strip()
         
-        # Limitation de la longueur de la réponse (sécurité)
+        # Response length limitation (Security)
         if len(ai_response_text) > 2000:
             ai_response_text = ai_response_text[:1997] + "..."
         
-        # Succès - Retour de la réponse
+        # Success - Returning response and meta-data
         return jsonify({
             "response": ai_response_text,
             "tokens_used": len(full_prompt.split()) + len(ai_response_text.split())
         }), 200
             
     except ValueError as e:
-        # Erreur de parsing JSON
-        print(f"Erreur de validation dans api_chatbot: {e}")
-        return jsonify({
-            "error": "Données invalides"
-        }), 400
+        print(f"Validation error in api_chatbot: {e}")
+        return jsonify({"error": "Invalid data"}), 400
         
     except Exception as e:
-        # Erreur inattendue
-        print(f"Erreur inattendue dans api_chatbot: {e}")
+        print(f"Unexpected error in api_chatbot: {e}")
         return jsonify({
-            "error": "Une erreur s'est produite. Veuillez réessayer dans quelques instants."
+            "error": "An error occurred. Please try again in a few moments."
         }), 500
 
 
 @chatbot_bp.route('/api/chatbot/suggestions', methods=['GET'])
-def get_suggestions():
+def get_suggestions() -> Tuple[Response, int]:
     """
-    Retourne une liste de questions suggérées pour démarrer une conversation.
+    Returns a list of suggested questions to start a conversation.
     """
-    suggestions = [
-        {
-            "question": "Quelle est la température du Soleil ?",
-            "category": "système_solaire"
-        },
-        {
-            "question": "Combien de lunes a Jupiter ?",
-            "category": "système_solaire"
-        },
-        {
-            "question": "Qu'est-ce qu'une supernova ?",
-            "category": "étoiles"
-        },
-        {
-            "question": "Pourquoi Mars est-elle rouge ?",
-            "category": "planètes"
-        },
-        {
-            "question": "Comment se forment les galaxies ?",
-            "category": "cosmologie"
-        },
-        {
-            "question": "Qu'est-ce qu'un trou noir ?",
-            "category": "objets_extrêmes"
-        },
-        {
-            "question": "Pourquoi la Lune change-t-elle de forme ?",
-            "category": "système_solaire"
-        },
-        {
-            "question": "C'est quoi la Voie Lactée ?",
-            "category": "galaxies"
-        }
+    suggestions: List[Dict[str, str]] = [
+        {"question": "Quelle est la température du Soleil ?", "category": "solar_system"},
+        {"question": "Combien de lunes a Jupiter ?", "category": "solar_system"},
+        {"question": "Qu'est-ce qu'une supernova ?", "category": "stars"},
+        {"question": "Pourquoi Mars est-elle rouge ?", "category": "planets"},
+        {"question": "Comment se forment les galaxies ?", "category": "cosmology"},
+        {"question": "Qu'est-ce qu'un trou noir ?", "category": "extreme_objects"},
+        {"question": "Pourquoi la Lune change-t-elle de forme ?", "category": "solar_system"},
+        {"question": "C'est quoi la Voie Lactée ?", "category": "galaxies"}
     ]
     
     return jsonify({"suggestions": suggestions}), 200
 
 
 @chatbot_bp.route('/api/chatbot/health', methods=['GET'])
-def health_check():
+def health_check() -> Tuple[Response, int]:
     """
-    Endpoint de vérification de l'état du chatbot.
+    Chatbot status check endpoint.
     """
     return jsonify({
         "status": "operational",
