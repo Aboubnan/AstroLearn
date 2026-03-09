@@ -1,32 +1,30 @@
-# config.py - AstroLearn Configuration
+# config.py - AstroLearn Configuration (Secured)
 
 import os
-from typing import List, Dict, Optional, Any
+from dotenv import load_dotenv
+from typing import Optional
 
-# ==================== DATABASE CONFIGURATION ====================
-DATABASE_NAME: str = "astrolearn.db"
-BASE_DIR: str = os.path.dirname(os.path.abspath(__file__))
-DATABASE_PATH: str = os.path.join(BASE_DIR, DATABASE_NAME)
+# Charge les variables du fichier .env
+load_dotenv()
+
+# ==================== POSTGRESQL CONFIGURATION ====================
+DB_USER: str = os.environ.get('DB_USER', 'postgres')
+DB_PASSWORD: str = os.environ.get('DB_PASSWORD', '') # Lu depuis le .env
+DB_HOST: str = os.environ.get('DB_HOST', 'localhost')
+DB_PORT: str = os.environ.get('DB_PORT', '5432')
+DB_NAME: str = os.environ.get('DB_NAME', 'astrolearn_db')
+
+DATABASE_URL: str = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 # ==================== FLASK SERVER ====================
-# Using environment variables for security in production
-SECRET_KEY: str = os.environ.get('SECRET_KEY', 'dev_key_change_in_production')
+SECRET_KEY: str = os.environ.get('SECRET_KEY', 'default_fallback_key')
 HOST: str = '127.0.0.1'
 PORT: int = 5000
 
-# ==================== GEMINI AI API ====================
-# Get API key from environment or fallback to the provided string
-API_KEY: str = os.environ.get('GEMINI_API_KEY', "AIzaSyD0emeGIX-S9JkCYgQa3pOGbCSNF5NS5xQ")
+# ==================== API CONFIGURATION ====================
+# Ici, on ne met PLUS JAMAIS la clé en texte brut. 
+# Si os.environ.get ne trouve rien, l'app ne pourra pas appeler l'API, ce qui est normal.
+API_KEY: Optional[str] = os.environ.get('GEMINI_API_KEY')
 
-# Gemini 2.5 Flash Endpoint (Latest stable model as of 2026)
 GEMINI_API_URL: str = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
-CHATBOT_MODEL: str = "gemini-2.5-flash"
-
-# ==================== NASA API ====================
 NASA_IMAGES_URL: str = "https://images-api.nasa.gov/search"
-
-# ==================== USAGE NOTES ====================
-# Gemini Free Tier Limits:
-# - 60 requests per minute
-# - 1500 requests per day
-# - No credit card required for this tier
