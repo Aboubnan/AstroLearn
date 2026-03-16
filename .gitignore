@@ -24,6 +24,7 @@ build/
 *.db
 *.sqlite3
 static/uploads/objects/*
+!static/uploads/objects/.gitkeep
 
 # --- IDE & OS ---
 .vscode/
