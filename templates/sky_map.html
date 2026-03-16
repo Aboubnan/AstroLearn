@@ -5,9 +5,8 @@
     <p>Explorez le système solaire en 3D ! Cliquez sur une planète pour voir ses informations.</p>
 
     <!-- Conteneur pour la scène 3D -->
-    <div id="solar-system-container" style="width: 100%; height: 600px; border: 1px solid #ccc; background-color: #000; overflow: hidden;">
-    </div>
-
+<div id="solar-system-container" style="width: 100%; height: 620px; background-color: #000; position: relative; overflow: hidden;">
+</div>
     <!-- Modal pour les infos (cachée par défaut) -->
     <div id="planet-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #0d1117; color: #c9d1d9; padding: 20px; border: 1px solid #ffaa00; border-radius: 10px; z-index: 1000; max-width: 400px;">
         <h3 id="modal-title"></h3>
@@ -19,5 +18,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="{{ url_for('static', filename='js/solar_system.js') }}"></script>
+
+    <style>
+    #solar-system-container {
+        height: 600px;
+    }
+    @media (max-width: 480px) {
+        #solar-system-container {
+        height: 400px;
+        }
+    }
+    </style>
 
 {% endblock %}

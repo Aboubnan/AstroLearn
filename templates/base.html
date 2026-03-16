@@ -13,45 +13,48 @@
 </head>
 
 <body class="min-h-screen flex flex-col">
-    <header class="bg-gray-900 shadow-lg sticky top-0 z-50">
-        <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+    <header class="bg-gray-900 shadow-lg sticky top-0 z-50 text-white">
+    <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+        
+        <a href="{{ url_for('main_bp.index') }}" class="flex items-center space-x-2 shrink-0"> 
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="AstroLearn Logo" class="h-12 w-12 sm:h-16 sm:w-16">
+            <span class="text-xl sm:text-2xl font-bold">AstroLearn</span>
+        </a>
+
+        <div class="hidden md:flex items-center space-x-6">
+            <a href="{{ url_for('main_bp.index') }}" class="hover:text-blue-400 transition">Accueil</a>
+            <a href="{{ url_for('main_bp.catalogue') }}" class="hover:text-blue-400 transition">Encyclopédie</a>
+            <a href="{{ url_for('skymap.sky_map') }}" class="hover:text-blue-400 transition">Système Solaire</a>
+            <a href="{{ url_for('main_bp.formulaire') }}" class="hover:text-blue-400 transition">Sondage</a>
             
-            <a href="{{ url_for('main_bp.index') }}" class="flex items-center space-x-2"> 
-                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="AstroLearn Logo" class="h-20 w-20">
-                <span class="text-2xl font-bold text-white">AstroLearn</span>
-            </a>
+            {% if session.get('is_admin') %}
+                <a href="{{ url_for('admin_bp.admin_dashboard') }}" class="bg-green-600 px-3 py-1 rounded-full text-xs">Admin</a>
+            {% endif %}
+        </div>
 
-            <div class="flex items-center space-x-6">
-                <div class="flex space-x-6">
-                    <a href="{{ url_for('main_bp.index') }}" class="hover:text-accent transition duration-150">Accueil</a>
+        <div class="md:hidden">
+            <button id="mobile-menu-button" class="text-2xl focus:outline-none">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
 
-                    <a href="{{ url_for('main_bp.catalogue') }}" class="hover:text-accent transition duration-150">Encyclopédie</a>
-
-                    <a href="{{ url_for('skymap.sky_map') }}" class="hover:text-accent transition duration-150">Carte du Système Solaire</a>
-                   
-                    <a href="{{ url_for('main_bp.formulaire') }}" class="hover:text-accent transition duration-150">Sondage & Avis</a>
-                </div>
-
-                {% if session.get('is_admin') %}
-                    <a href="{{ url_for('admin_bp.admin_dashboard') }}" class="text-sm font-semibold bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-full shadow-md transition duration-150">
-                        Admin <i class="fas fa-lock-open ml-1"></i>
-                    </a>
-                    
-                    <a href="{{ url_for('admin_bp.admin_logout') }}" class="text-sm text-red-400 hover:text-red-500 transition duration-150">
-                        Déconnexion
-                    </a>
-                {% else %}
-                    <a href="{{ url_for('admin_bp.admin_login') }}" class="text-sm font-semibold hover:text-accent transition duration-150">
-                        Admin <i class="fas fa-lock ml-1"></i>
-                    </a>
-                {% endif %}
-
-                <button class="md:hidden text-2xl text-white hover:text-accent">
-                    <i class="fas fa-bars"></i>
-                </button>
-            </div>
-        </nav>
-    </header>
+    <div id="mobile-menu" class="hidden md:hidden bg-gray-800 border-t border-gray-700">
+        <div class="flex flex-col space-y-4 px-6 py-4">
+            <a href="{{ url_for('main_bp.index') }}" class="hover:text-blue-400">Accueil</a>
+            <a href="{{ url_for('main_bp.catalogue') }}" class="hover:text-blue-400">Encyclopédie</a>
+            <a href="{{ url_for('skymap.sky_map') }}" class="hover:text-blue-400">Système Solaire</a>
+            <a href="{{ url_for('main_bp.formulaire') }}" class="hover:text-blue-400">Sondage & Avis</a>
+            <hr class="border-gray-700">
+            {% if session.get('is_admin') %}
+                <a href="{{ url_for('admin_bp.admin_dashboard') }}" class="text-green-400">Tableau de bord Admin</a>
+                <a href="{{ url_for('admin_bp.admin_logout') }}" class="text-red-400">Déconnexion</a>
+            {% else %}
+                <a href="{{ url_for('admin_bp.admin_login') }}" class="text-gray-300">Connexion Admin</a>
+            {% endif %}
+        </div>
+    </div>
+</header>
 
     <div class="container mx-auto px-4 pt-4">
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -122,5 +125,13 @@
 
     <!-- Scripts -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+    const btn = document.getElementById('mobile-menu-button');
+    const menu = document.getElementById('mobile-menu');
+
+    btn.addEventListener('click', () => {
+        menu.classList.toggle('hidden');
+    });
+</script>
 </body>
 </html>
