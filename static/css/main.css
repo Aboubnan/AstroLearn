@@ -56,3 +56,22 @@ iframe[data-tally-src] {
     display: block;
     overflow: hidden !important;
 }
+
+/* On force le conteneur à laisser passer le menu */
+section.sticky {
+    overflow: visible !important;
+    z-index: 50; /* Pour passer devant les cartes */
+}
+
+/* On s'assure que le formulaire ne coupe rien */
+section.sticky form {
+    overflow: visible !important;
+}
+
+/* Sur mobile, on peut aussi aider le select à mieux respirer */
+@media (max-width: 768px) {
+    select#category_id {
+        position: relative;
+        z-index: 60;
+    }
+}
