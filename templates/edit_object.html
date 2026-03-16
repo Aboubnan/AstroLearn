@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-12 px-4">
+    <div class="mb-8 flex items-center justify-between">
+        <h1 class="text-3xl font-bold text-white">Modifier l'objet : <span class="text-accent">{{ obj[1] }}</span></h1>
+        <a href="{{ url_for('admin_bp.admin_dashboard') }}" class="text-gray-400 hover:text-white transition">
+            <i class="fas fa-times mr-2"></i> Annuler
+        </a>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700 space-y-6">
+        
+        <div>
+            <label class="block text-gray-400 mb-2 font-medium">Nom de l'astre</label>
+            <input type="text" name="name" value="{{ obj[1] }}" required
+                   class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent transition">
+        </div>
+
+        <div>
+            <label class="block text-gray-400 mb-2 font-medium">Description</label>
+            <textarea name="description" rows="5" required
+                      class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent transition">{{ obj[3] }}</textarea>
+        </div>
+
+        <div>
+            <label class="block text-gray-400 mb-2 font-medium">Catégorie</label>
+            <select name="category_id" required
+                    class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent transition">
+                {% for cat in categories %}
+                    <option value="{{ cat[0] }}" {% if cat[0] == obj[7] %}selected{% endif %}>
+                        {{ cat[1] }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-gray-400 mb-2 font-medium">Image de l'objet</label>
+            <div class="flex items-center space-x-6 p-4 bg-gray-900 rounded-xl border border-gray-700">
+                <div class="flex-shrink-0">
+                    <p class="text-xs text-gray-500 mb-2">Actuelle :</p>
+                    <img src="{% if 'http' in obj[5] %}{{ obj[5] }}{% else %}{{ url_for('static', filename=obj[5]) }}{% endif %}" 
+                         class="w-24 h-24 object-cover rounded-lg border border-gray-600"
+                         onerror="this.src='https://placehold.co/100?text=No+Img'">
+                </div>
+                <div class="flex-grow">
+                    <p class="text-sm text-gray-300 mb-2">Remplacer par un nouveau fichier :</p>
+                    <input type="file" name="image" accept="image/*"
+                           class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-white hover:file:bg-accent-dark">
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="w-full bg-accent hover:bg-accent-dark text-white font-bold py-4 rounded-xl shadow-lg transition duration-200">
+            <i class="fas fa-save mr-2"></i> Enregistrer les modifications
+        </button>
+    </form>
+</div>
+{% endblock %}
