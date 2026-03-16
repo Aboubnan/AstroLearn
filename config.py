@@ -17,7 +17,8 @@ DB_NAME: str = os.environ.get('DB_NAME', 'astrolearn_db')
 DATABASE_URL: str = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 # ==================== FLASK SERVER ====================
-SECRET_KEY: str = os.environ.get('SECRET_KEY', 'default_fallback_key')
+# SECRET_KEY: str = os.environ.get('SECRET_KEY', 'default_fallback_key')
+SECRET_KEY: str = os.urandom(24).hex()
 HOST: str = '127.0.0.1'
 PORT: int = 5000
 
