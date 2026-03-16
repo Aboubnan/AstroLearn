@@ -28,7 +28,10 @@
             <a href="{{ url_for('main_bp.formulaire') }}" class="hover:text-blue-400 transition">Sondage</a>
             
             {% if session.get('is_admin') %}
-                <a href="{{ url_for('admin_bp.admin_dashboard') }}" class="bg-green-600 px-3 py-1 rounded-full text-xs">Admin</a>
+                <a href="{{ url_for('admin_bp.admin_dashboard') }}" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded-full text-xs font-bold transition">Tableau de Bord Admin</a>
+                <a href="{{ url_for('admin_bp.admin_logout') }}" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded-full text-xs font-bold transition">Déconnexion</a>
+            {% else %}
+                <a href="{{ url_for('admin_bp.admin_login') }}" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded-full text-xs font-bold transition">Connexion Admin</a>
             {% endif %}
         </div>
 
