@@ -23,6 +23,7 @@ build/
 # On ignore SQLite car tu es passé sur PostgreSQL (qui est externe au dossier)
 *.db
 *.sqlite3
+static/uploads/objects/*
 
 # --- IDE & OS ---
 .vscode/
