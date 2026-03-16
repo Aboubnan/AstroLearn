@@ -137,3 +137,7 @@ def formulaire() -> str:
         now=datetime.datetime.now(),
         title="AstroLearn Survey"
     )
+
+@main_bp.route('/legal')
+def legal():
+    return render_template('legal.html', title="Mentions Légales")

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto bg-gray-900 text-gray-200 p-8 rounded-xl shadow-2xl border border-gray-800 my-10">
+    <h1 class="text-3xl font-bold text-white mb-8 border-b border-blue-500 pb-4 text-center">Informations Légales</h1>
+
+    <div class="bg-gray-800 p-4 rounded-lg mb-10">
+        <p class="font-bold mb-2 text-blue-400">Sommaire :</p>
+        <ul class="list-disc list-inside space-y-1">
+            <li><a href="#confidentialite" class="hover:underline text-blue-300">Politique de Confidentialité</a></li>
+            <li><a href="#conditions" class="hover:underline text-blue-300">Conditions d'Utilisation</a></li>
+        </ul>
+    </div>
+
+    <section id="confidentialite" class="mb-12 scroll-mt-24">
+        <h2 class="text-2xl font-semibold text-blue-400 mb-4 flex items-center">
+            <i class="fas fa-shield-alt mr-2"></i> Politique de Confidentialité
+        </h2>
+        <div class="space-y-4 text-gray-400 leading-relaxed">
+            <p><strong>AstroLearn</strong> s'engage à ce que la collecte et le traitement de vos données soient conformes au RGPD. Nous ne collectons que les données strictement nécessaires (ex: réponses au sondage).</p>
+            <p>Vos données ne sont jamais cédées à des tiers et sont utilisées uniquement pour améliorer l'expérience pédagogique du site.</p>
+        </div>
+    </section>
+
+    <hr class="border-gray-800 mb-12">
+
+    <section id="conditions" class="mb-8 scroll-mt-24">
+        <h2 class="text-2xl font-semibold text-orange-400 mb-4 flex items-center">
+            <i class="fas fa-file-contract mr-2"></i> Conditions d'Utilisation
+        </h2>
+        <div class="space-y-4 text-gray-400 leading-relaxed">
+            <p>En naviguant sur AstroLearn, vous acceptez les conditions suivantes :</p>
+            <ul class="list-disc list-inside ml-4">
+                <li>Le contenu est fourni à titre informatif et éducatif.</li>
+                <li>L'utilisation abusive des outils interactifs (système solaire, chatbot) est interdite.</li>
+                <li>Toute reproduction du contenu sans autorisation est prohibée.</li>
+            </ul>
+        </div>
+    </section>
+
+    <div class="mt-12 text-center">
+        <a href="{{ url_for('main_bp.index') }}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full transition">
+            <i class="fas fa-arrow-left mr-2"></i> Retour à l'accueil
+        </a>
+    </div>
+</div>
+{% endblock %}
