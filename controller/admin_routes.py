@@ -55,11 +55,9 @@ def admin_dashboard():
     conn = get_db_connection()
     cur = conn.cursor()
     
-    # 1. Compte des objets
     cur.execute("SELECT COUNT(*) FROM objet_celeste")
     count_objects = cur.fetchone()[0]
 
-    # 2. Compte IA (Safe check)
     try:
         cur.execute("SELECT COUNT(*) FROM historique_ia")
         count_ia = cur.fetchone()[0]
@@ -67,7 +65,6 @@ def admin_dashboard():
         conn.rollback()
         count_ia = "0"
 
-    # 3. Liste des objets
     cur.execute("""
         SELECT o.id_objet, o.nom_fr, o.date_publication, c.nom_categorie 
         FROM objet_celeste o
@@ -125,6 +122,40 @@ def add_celestial_object():
     conn.close()
     return render_template('add_object.html', categories=categories)
 
+@admin_bp.route('/admin/edit-object/<int:object_id>', methods=['GET', 'POST'])
+@admin_required
+def edit_celestial_object(object_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    if request.method == 'POST':
+        nom_fr = request.form.get('nom_fr')
+        description = request.form.get('description')
+        id_cat = request.form.get('category_id')
+
+        try:
+            cur.execute("""
+                UPDATE objet_celeste 
+                SET nom_fr = %s, description = %s, fk_id_categorie = %s 
+                WHERE id_objet = %s
+            """, (nom_fr, description, id_cat, object_id))
+            conn.commit()
+            flash("Objet mis à jour avec succès !", "success")
+            return redirect(url_for('admin_bp.admin_dashboard'))
+        except Exception as e:
+            conn.rollback()
+            flash(f"Erreur lors de la modification : {e}", "error")
+
+    cur.execute("SELECT * FROM objet_celeste WHERE id_objet = %s", (object_id,))
+    obj = cur.fetchone()
+    
+    cur.execute("SELECT id_categorie, nom_categorie FROM categorie ORDER BY nom_categorie")
+    categories = cur.fetchall()
+    
+    cur.close()
+    conn.close()
+    return render_template('edit_object.html', obj=obj, categories=categories)
+
 @admin_bp.route('/admin/delete-object/<int:object_id>', methods=['POST'])
 @admin_required
 def delete_celestial_object(object_id):
@@ -155,7 +186,6 @@ def ingest_data():
 
 @admin_bp.route('/api/translate', methods=['POST'])
 def translate_text():
-    """Route API de traduction accessible via JavaScript"""
     data = request.json
     text = data.get('text', '')
     target_lang = data.get('lang', 'fr')
