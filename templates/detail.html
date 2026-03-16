@@ -18,11 +18,10 @@
             </p>
 
             <div class="rounded-xl overflow-hidden shadow-xl border-4 border-gray-700">
-                <img src="{{ obj.url_image }}" 
+                <img src="{% if 'http' in obj.url_image %}{{ obj.url_image }}{% else %}{{ url_for('static', filename=obj.url_image) }}{% endif %}" 
                     alt="Vue détaillée de {{ obj.nom_fr }}" 
                     class="w-full h-auto object-cover"
-                    onerror="this.onerror=null; this.src='https://placehold.co/800x600/1f2937/d1d5db?text=Image+Non+Disponible';"
-                >
+                    onerror="this.onerror=null; this.src='https://placehold.co/800x600/1f2937/d1d5db?text=Image+Non+Disponible';">
             </div>
         </div>
 

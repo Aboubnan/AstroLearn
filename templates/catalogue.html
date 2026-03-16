@@ -55,10 +55,10 @@
                 {% for obj in objects %}
                     <div class="bg-gray-800 rounded-xl overflow-hidden shadow-xl hover:shadow-accent/50 transition duration-300 transform hover:scale-105">
                         <a href="{{ url_for('main_bp.object_detail', object_id=obj.id_objet) }}">
-                            <img src="{{ obj.url_image }}" 
-                                 alt="{{ obj.nom_fr }}" 
-                                 class="w-full h-48 object-cover"
-                                 onerror="this.src='https://placehold.co/400x300/1f2937/d1d5db?text={{ obj.nom_fr }}'">
+                            <img src="{% if 'http' in obj.url_image %}{{ obj.url_image }}{% else %}{{ url_for('static', filename=obj.url_image) }}{% endif %}" 
+                                alt="{{ obj.nom_fr }}" 
+                                class="w-full h-48 object-cover"
+                                onerror="this.src='https://placehold.co/400x300/1f2937/d1d5db?text={{ obj.nom_fr }}'">
                         </a>
                         <div class="p-4">
                             <h3 class="text-lg md:text-xl font-semibold text-white truncate" title="{{ obj.nom_fr }}">
