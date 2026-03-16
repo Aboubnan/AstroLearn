@@ -32,6 +32,8 @@ def admin_login() -> Union[str, Response]:
         admin = get_admin_by_pseudo(pseudo)
         
         if admin and check_password(admin['mot_de_passe_hash'], password):
+            # On s'assure que la session n'est pas permanente
+            session.permanent = False 
             session['is_admin'] = True
             session['admin_id'] = admin['id_admin']
             flash("Administrator connection successful.", 'success')
@@ -42,8 +44,8 @@ def admin_login() -> Union[str, Response]:
 
 @admin_bp.route('/admin_logout')
 def admin_logout() -> Response:
-    session.pop('is_admin', None)
-    session.pop('admin_id', None)
+    # On vide TOUTE la session d'un coup
+    session.clear() 
     flash("You have been logged out.", 'info')
     return redirect(url_for('main_bp.index'))
 
