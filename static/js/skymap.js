@@ -1,15 +1,18 @@
+/* JavaScript pour la Carte Stellaire - Version Tactile */
+
 document.addEventListener("DOMContentLoaded", () => {
+    if (typeof Celestial === 'undefined') {
+        console.error("Celestial n'est pas défini.");
+        return;
+    }
     initializeCelestialMap();
 });
 
 function initializeCelestialMap() {
     const container = document.getElementById("star-map-container");
-    if (!container) {
-        console.error("Conteneur #star-map-container non trouvé.");
-        return;
-    }
+    if (!container) return;
 
-    container.innerHTML = "";  // Vide le conteneur
+    container.innerHTML = ""; 
 
     const config = {
         container: "star-map-container",
@@ -21,45 +24,39 @@ function initializeCelestialMap() {
         type: "svg"
     };
 
-    try {
-        Celestial.display(config, function(error) {
-            if (error) {
-                console.error("Erreur lors de l'affichage de la carte céleste :", error);
-                return;
-            }
-            console.log("Carte céleste chargée avec succès.");
+    Celestial.display(config, function(error) {
+        if (error) return;
+        
+        const svg = container.querySelector("svg");
+        if (svg) {
+            svg.style.cursor = "pointer";
+            
+            // On utilise une fonction nommée pour pouvoir gérer Click et Touch
+            const handleAction = (e) => {
+                // Empêche le zoom natif du navigateur sur le double tap
+                if (e.type === 'touchstart') e.preventDefault();
+                handleSvgClick(e, svg);
+            };
 
-            // Une fois affichée, récupère l'élément SVG
-            const svg = container.querySelector("svg");
-            if (svg) {
-                svg.style.cursor = "pointer";
-                svg.addEventListener("click", function (event) {
-                    handleSvgClick(event, svg);
-                });
-            } else {
-                console.error("SVG non trouvé dans le conteneur après affichage.");
-            }
-        });
-    } catch (e) {
-        console.error("Erreur lors de l'initialisation de Celestial :", e);
-    }
+            svg.addEventListener("click", handleAction);
+            svg.addEventListener("touchstart", handleAction, {passive: false});
+        }
+    });
 }
-
-// --------------------------- 
-// GESTION DU CLIC SUR SVG
-// ---------------------------
 
 function handleSvgClick(event, svg) {
     const rect = svg.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    
+    // Récupération des coordonnées (Souris ou Doigt)
+    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
 
     const eq = Celestial.mapProjection.invert([x, y]);
 
-    if (!eq) {
-        console.log("Clic hors de la projection.");
-        return;
-    }
+    if (!eq || isNaN(eq[0])) return;
 
     const ra = eq[0];
     const dec = eq[1];
@@ -68,36 +65,22 @@ function handleSvgClick(event, svg) {
 
     if (clicked) {
         const name = clicked.properties.name || clicked.id || "Objet inconnu";
-        const mag = clicked.properties.mag || "N/A";
         const type = clicked.type || "Inconnu";
-
-        alert(`
-Objet cliqué :
-Nom : ${name}
-Type : ${type}
-Magnitude : ${mag}
-        `);
-    } else {
-        alert("Aucun objet trouvé près du clic.");
+        alert(`Objet : ${name}\nType : ${type}`);
     }
 }
-
-// -----------------------------------------------------
-// FONCTION : Trouve l'objet le plus proche dans les data
-// -----------------------------------------------------
 
 function findNearestCelestialObject(raClick, decClick) {
     let nearest = null;
     let minDist = Infinity;
-
     const sources = ["stars", "dsos", "planets"];
+
+    // Tolérance : 2.0 sur mobile (largeur d'un doigt), 0.5 sur PC
+    const tolerance = window.innerWidth < 768 ? 2.0 : 0.5;
 
     sources.forEach(type => {
         const list = Celestial.data[type];
-        if (!list || !list.features) {
-            console.warn(`Données pour ${type} non disponibles.`);
-            return;
-        }
+        if (!list || !list.features) return;
 
         list.features.forEach(obj => {
             const ra = obj.properties.ra;
@@ -113,30 +96,14 @@ function findNearestCelestialObject(raClick, decClick) {
         });
     });
 
-    return minDist < 0.4 ? nearest : null;
+    return minDist < tolerance ? nearest : null;
 }
 
-// -----------------------------------------------------
-// Calcule la distance angulaire entre deux points RA/DEC
-// -----------------------------------------------------
 function angularDistance(ra1, dec1, ra2, dec2) {
     const rad = Math.PI / 180;
-    ra1 *= rad;
-    dec1 *= rad;
-    ra2 *= rad;
-    dec2 *= rad;
-
+    ra1 *= rad; dec1 *= rad; ra2 *= rad; dec2 *= rad;
     return Math.acos(
         Math.sin(dec1) * Math.sin(dec2) +
         Math.cos(dec1) * Math.cos(dec2) * Math.cos(ra1 - ra2)
     ) / rad;
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-    console.log("DOM chargé. Vérification de Celestial :", typeof Celestial);  // Ajoutez cette ligne
-    if (typeof Celestial === 'undefined') {
-        console.error("Celestial n'est pas défini. Vérifiez le chargement des scripts.");
-        return;
-    }
-    initializeCelestialMap();
-});
