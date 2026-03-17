@@ -17,7 +17,7 @@
     <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         
         <a href="{{ url_for('main_bp.index') }}" class="flex items-center space-x-2 shrink-0"> 
-            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="AstroLearn Logo" class="h-12 w-12 sm:h-16 sm:w-16">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="AstroLearn Logo" class="h-24 w-24 sm:h-40 sm:w-40">
             <span class="text-xl sm:text-2xl font-bold">AstroLearn</span>
         </a>
 
@@ -90,8 +90,10 @@
     <!-- ==================== CHATBOT WIDGET AMÉLIORÉ ==================== -->
     <div id="chatbot-widget">
         <!-- Bouton d'ouverture flottant -->
-        <button id="chatbot-open-btn" title="Discuter avec AstroIA">
-            <img src="{{ url_for('static', filename='images/chatbot2.png') }}" alt="AstroIA"> 
+        <button id="chatbot-open-btn" title="Discuter avec AstroIA" class="hover:scale-110 transition-transform">
+            <img src="{{ url_for('static', filename='images/chatbot2.png') }}" 
+                alt="AstroIA" 
+                class="w-24 h-24 sm:w-32 sm:h-32 object-contain"> 
         </button>
 
         <!-- Fenêtre du chatbot -->
