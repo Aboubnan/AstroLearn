@@ -1,4 +1,4 @@
-/* JavaScript pour la Carte Stellaire - Version Tactile */
+/* static/js/skymap.js - Version Tactile Optimisée */
 
 document.addEventListener("DOMContentLoaded", () => {
     if (typeof Celestial === 'undefined') {
@@ -21,6 +21,7 @@ function initializeCelestialMap() {
         planets: { show: true, names: true },
         stars: { show: true, limit: 6 },
         dsos: { show: true },
+        form: false, // Désactive les formulaires natifs qui peuvent gêner sur mobile
         type: "svg"
     };
 
@@ -31,60 +32,92 @@ function initializeCelestialMap() {
         if (svg) {
             svg.style.cursor = "pointer";
             
-            // On utilise une fonction nommée pour pouvoir gérer Click et Touch
-            const handleAction = (e) => {
-                // Empêche le zoom natif du navigateur sur le double tap
-                if (e.type === 'touchstart') e.preventDefault();
-                handleSvgClick(e, svg);
-            };
-
-            svg.addEventListener("click", handleAction);
-            svg.addEventListener("touchstart", handleAction, {passive: false});
+            // GESTION MOBILE : On utilise touchend pour éviter les conflits de scroll
+            svg.addEventListener("click", (e) => handleAction(e, svg));
+            
+            svg.addEventListener("touchend", (e) => {
+                // Si l'utilisateur scrollait, on ne déclenche pas le clic
+                if (e.cancelable) {
+                    handleAction(e, svg);
+                }
+            }, { passive: false });
         }
     });
+}
+
+function handleAction(event, svg) {
+    // Empêche la propagation pour ne pas que le chatbot reçoive l'event
+    event.stopPropagation();
+    handleSvgClick(event, svg);
 }
 
 function handleSvgClick(event, svg) {
     const rect = svg.getBoundingClientRect();
     
-    // Récupération des coordonnées (Souris ou Doigt)
-    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+    // Correction : Pour touchend, les coordonnées sont dans changedTouches
+    let clientX, clientY;
+    if (event.changedTouches && event.changedTouches.length > 0) {
+        clientX = event.changedTouches[0].clientX;
+        clientY = event.changedTouches[0].clientY;
+    } else if (event.touches && event.touches.length > 0) {
+        clientX = event.touches[0].clientX;
+        clientY = event.touches[0].clientY;
+    } else {
+        clientX = event.clientX;
+        clientY = event.clientY;
+    }
 
     const x = clientX - rect.left;
     const y = clientY - rect.top;
 
-    const eq = Celestial.mapProjection.invert([x, y]);
+    // Inversion de la projection pour obtenir RA/DEC
+    try {
+        const eq = Celestial.mapProjection.invert([x, y]);
+        if (!eq || isNaN(eq[0])) return;
 
-    if (!eq || isNaN(eq[0])) return;
+        const ra = eq[0];
+        const dec = eq[1];
 
-    const ra = eq[0];
-    const dec = eq[1];
+        const clicked = findNearestCelestialObject(ra, dec);
 
-    const clicked = findNearestCelestialObject(ra, dec);
-
-    if (clicked) {
-        const name = clicked.properties.name || clicked.id || "Objet inconnu";
-        const type = clicked.type || "Inconnu";
-        alert(`Objet : ${name}\nType : ${type}`);
+        if (clicked) {
+            const name = clicked.properties.name || clicked.id || "Objet inconnu";
+            const type = clicked.type || "Inconnu";
+            // Remplacement de l'alert (bloquant) par un petit log ou une notification custom
+            console.log(`Objet détecté : ${name}`);
+            alert(`Objet : ${name}\nType : ${type}`);
+        }
+    } catch (err) {
+        console.error("Erreur de projection :", err);
     }
 }
 
 function findNearestCelestialObject(raClick, decClick) {
     let nearest = null;
     let minDist = Infinity;
-    const sources = ["stars", "dsos", "planets"];
+    
+    // On priorise les planètes qui sont souvent plus dures à cliquer
+    const sources = ["planets", "stars", "dsos"];
 
-    // Tolérance : 2.0 sur mobile (largeur d'un doigt), 0.5 sur PC
-    const tolerance = window.innerWidth < 768 ? 2.0 : 0.5;
+    // Tolérance accrue sur mobile : le doigt est moins précis qu'un curseur
+    const isMobile = window.innerWidth < 768;
+    const tolerance = isMobile ? 3.0 : 0.8; 
 
     sources.forEach(type => {
-        const list = Celestial.data[type];
+        const list = Celestial.data ? Celestial.data[type] : null;
         if (!list || !list.features) return;
 
         list.features.forEach(obj => {
-            const ra = obj.properties.ra;
-            const dec = obj.properties.dec;
+            // Support des différents formats de coordonnées de d3-celestial
+            let ra, dec;
+            if (obj.properties && obj.properties.ra !== undefined) {
+                ra = obj.properties.ra;
+                dec = obj.properties.dec;
+            } else if (obj.geometry && obj.geometry.coordinates) {
+                ra = obj.geometry.coordinates[0];
+                dec = obj.geometry.coordinates[1];
+            }
+
             if (ra === undefined || dec === undefined) return;
 
             const dist = angularDistance(ra, dec, raClick, decClick);
@@ -101,9 +134,13 @@ function findNearestCelestialObject(raClick, decClick) {
 
 function angularDistance(ra1, dec1, ra2, dec2) {
     const rad = Math.PI / 180;
-    ra1 *= rad; dec1 *= rad; ra2 *= rad; dec2 *= rad;
+    const phi1 = dec1 * rad;
+    const phi2 = dec2 * rad;
+    const deltaLambda = (ra1 - ra2) * rad;
+    
+    // Formule de la loi des cosinus pour la distance angulaire
     return Math.acos(
-        Math.sin(dec1) * Math.sin(dec2) +
-        Math.cos(dec1) * Math.cos(dec2) * Math.cos(ra1 - ra2)
+        Math.sin(phi1) * Math.sin(phi2) +
+        Math.cos(phi1) * Math.cos(phi2) * Math.cos(deltaLambda)
     ) / rad;
 }
