@@ -1,99 +1,291 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto space-y-12">
+<div class="max-w-6xl mx-auto py-6 space-y-6">
 
-    <hr class="border-gray-700">
-
-    <section class="text-center py-8 bg-gray-900 rounded-xl shadow-2xl border border-gray-700">
-        <h1 class="text-4xl font-extrabold text-white mb-2">
-            Tableau de Bord Administrateur
-        </h1>
-        <p class="text-lg text-green-400">
-            Bienvenue, Admin (ID : {{ session.admin_id or 'Non défini' }})
-        </p>
+    <!-- En-tête + stats -->
+    <section class="text-center py-6 bg-gray-900 rounded-xl border border-gray-700">
+        <h1 class="text-3xl font-extrabold text-white mb-1">Tableau de Bord Administrateur</h1>
+        <p class="text-green-400">Bienvenue, Admin (ID : {{ session.admin_id or 'Non défini' }})</p>
     </section>
 
-    <hr class="border-gray-700">
-
-    <section class="flex justify-center">
-        <div class="w-full max-w-md bg-gray-800 p-6 rounded-xl shadow-lg border-t-4 border-accent space-y-3">
-            <div class="flex items-center justify-between">
-                <p class="text-gray-400 text-sm font-medium">Catalogue AstroLearn</p>
-                <i class="fas fa-layer-group text-2xl text-accent"></i>
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-gray-800 p-5 rounded-xl border-t-4 border-accent flex items-center justify-between">
+            <div>
+                <p class="text-gray-400 text-sm">Catalogue</p>
+                <p class="text-3xl font-bold text-white">{{ count_objects }} <span class="text-sm font-normal text-gray-500">objets</span></p>
             </div>
-            <p class="text-3xl font-bold text-white">
-                {{ count_objects }} <span class="text-base font-normal text-gray-500">objets au total</span>
-            </p>
+            <i class="fas fa-layer-group text-3xl text-accent opacity-60"></i>
+        </div>
+        <div class="bg-gray-800 p-5 rounded-xl border-t-4 border-yellow-500 flex items-center justify-between">
+            <div>
+                <p class="text-gray-400 text-sm">En attente</p>
+                <p class="text-3xl font-bold text-white">{{ nb_en_attente }} <span class="text-sm font-normal text-gray-500">propositions</span></p>
+            </div>
+            <i class="fas fa-inbox text-3xl text-yellow-400 opacity-60"></i>
+        </div>
+        <div class="bg-gray-800 p-5 rounded-xl border-t-4 border-blue-500 flex items-center justify-between">
+            <div>
+                <p class="text-gray-400 text-sm">Membres</p>
+                <p class="text-3xl font-bold text-white">{{ utilisateurs|length }} <span class="text-sm font-normal text-gray-500">inscrits</span></p>
+            </div>
+            <i class="fas fa-users text-3xl text-blue-400 opacity-60"></i>
         </div>
     </section>
 
-    <hr class="border-gray-700">
+    <!-- ==================== ONGLETS ==================== -->
+    <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
 
-    <section class="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700">
-        <h2 class="text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-3 flex items-center">
-            <i class="fas fa-database mr-3 text-indigo-400"></i> Gestion des Données Externes
-        </h2>
-        <p class="text-gray-400 mb-4">
-            Déclenchez l'importation ou la mise à jour des corps célestes du Système Solaire (Planètes, Lunes, etc.) dans votre catalogue local depuis l'API externe.
-        </p>
-        <form method="POST" action="{{ url_for('admin_bp.ingest_data') }}">
-            <button type="submit"
-                    class="px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg shadow-md hover:bg-indigo-700 transition duration-200 flex items-center justify-center">
-                <i class="fas fa-sync-alt mr-2"></i> Démarrer l'Ingestion/Mise à Jour
+        <!-- Barre d'onglets -->
+        <div class="flex overflow-x-auto border-b border-gray-700 bg-gray-900">
+            <button onclick="switchTab('actions')" id="tab-actions"
+                    class="tab-btn active-tab flex items-center gap-2 px-5 py-4 text-sm font-semibold whitespace-nowrap transition-colors">
+                <i class="fas fa-tasks"></i> Actions Rapides
             </button>
-        </form>
-        <p class="text-xs text-gray-500 mt-2">
-            Attention : Cette opération est limitée par la performance de l'API externe.
-        </p>
-    </section>
-
-    <hr class="border-gray-700">
-
-    <section class="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700">
-        <h2 class="text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-3 flex items-center">
-            <i class="fas fa-tasks mr-3 text-accent"></i> Actions Rapides
-        </h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <a href="{{ url_for('admin_bp.add_celestial_object') }}" class="block p-4 rounded-lg bg-gray-900 hover:bg-gray-700 transition duration-200 shadow-md border border-transparent hover:border-green-500">
-                <i class="fas fa-plus-circle text-xl text-green-500 mr-3"></i>
-                <span class="font-semibold text-white">Ajouter un Nouvel Objet</span>
-                <p class="text-xs text-gray-500 mt-1">Gérer les données du catalogue.</p>
-            </a>
-            <a href="https://tally.so/forms/jaZGVR/submissions"
-               target="_blank"
-               class="block p-4 rounded-lg bg-gray-900 hover:bg-gray-700 transition duration-200 shadow-md border border-transparent hover:border-blue-500">
-                <i class="fas fa-chart-bar text-xl text-blue-500 mr-3"></i>
-                <span class="font-semibold text-white">Voir les Résultats du Sondage</span>
-                <p class="text-xs text-gray-500 mt-1">Ouvrir les analyses sur Tally.so</p>
-            </a>
-            <a href="{{ url_for('admin_bp.admin_logout') }}" class="block p-4 rounded-lg bg-gray-900 hover:bg-red-900 transition duration-200 shadow-md border border-transparent hover:border-red-500">
-                <i class="fas fa-sign-out-alt text-xl text-red-500 mr-3"></i>
-                <span class="font-semibold text-white">Déconnexion Sécurisée</span>
-                <p class="text-xs text-gray-500 mt-1">Quitter la session administrateur.</p>
-            </a>
+            <button onclick="switchTab('propositions')" id="tab-propositions"
+                    class="tab-btn flex items-center gap-2 px-5 py-4 text-sm font-semibold whitespace-nowrap transition-colors">
+                <i class="fas fa-inbox"></i> Propositions
+                {% if nb_en_attente > 0 %}
+                <span class="bg-yellow-500 text-black text-xs px-1.5 py-0.5 rounded-full font-bold">{{ nb_en_attente }}</span>
+                {% endif %}
+            </button>
+            <button onclick="switchTab('utilisateurs')" id="tab-utilisateurs"
+                    class="tab-btn flex items-center gap-2 px-5 py-4 text-sm font-semibold whitespace-nowrap transition-colors">
+                <i class="fas fa-users"></i> Utilisateurs
+            </button>
+            <button onclick="switchTab('admins')" id="tab-admins"
+                    class="tab-btn flex items-center gap-2 px-5 py-4 text-sm font-semibold whitespace-nowrap transition-colors">
+                <i class="fas fa-user-shield"></i> Administrateurs
+            </button>
+            <button onclick="switchTab('catalogue')" id="tab-catalogue"
+                    class="tab-btn flex items-center gap-2 px-5 py-4 text-sm font-semibold whitespace-nowrap transition-colors">
+                <i class="fas fa-list"></i> Catalogue
+            </button>
         </div>
-    </section>
 
-    <hr class="border-gray-700">
+        <!-- ==================== ONGLET : ACTIONS RAPIDES ==================== -->
+        <div id="panel-actions" class="tab-panel p-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <a href="{{ url_for('admin_bp.add_celestial_object') }}"
+                   class="block p-4 rounded-lg bg-gray-900 hover:bg-gray-700 transition border border-transparent hover:border-green-500">
+                    <i class="fas fa-plus-circle text-xl text-green-500 mr-3"></i>
+                    <span class="font-semibold text-white">Ajouter un Objet</span>
+                    <p class="text-xs text-gray-500 mt-1">Ajouter directement au catalogue.</p>
+                </a>
+                <button onclick="switchTab('propositions')"
+                        class="text-left p-4 rounded-lg bg-gray-900 hover:bg-gray-700 transition border border-transparent hover:border-yellow-500">
+                    <i class="fas fa-inbox text-xl text-yellow-400 mr-3"></i>
+                    <span class="font-semibold text-white">Traiter les Propositions</span>
+                    <p class="text-xs text-gray-500 mt-1">{{ nb_en_attente }} en attente de validation.</p>
+                </button>
+                <a href="https://tally.so/forms/jaZGVR/submissions" target="_blank"
+                   class="block p-4 rounded-lg bg-gray-900 hover:bg-gray-700 transition border border-transparent hover:border-blue-500">
+                    <i class="fas fa-chart-bar text-xl text-blue-500 mr-3"></i>
+                    <span class="font-semibold text-white">Résultats du Sondage</span>
+                    <p class="text-xs text-gray-500 mt-1">Ouvrir les analyses sur Tally.so</p>
+                </a>
+                <button onclick="switchTab('utilisateurs')"
+                        class="text-left p-4 rounded-lg bg-gray-900 hover:bg-gray-700 transition border border-transparent hover:border-blue-400">
+                    <i class="fas fa-users text-xl text-blue-400 mr-3"></i>
+                    <span class="font-semibold text-white">Gérer les Utilisateurs</span>
+                    <p class="text-xs text-gray-500 mt-1">{{ utilisateurs|length }} membres inscrits.</p>
+                </button>
+                <button onclick="switchTab('admins')"
+                        class="text-left p-4 rounded-lg bg-gray-900 hover:bg-gray-700 transition border border-transparent hover:border-yellow-400">
+                    <i class="fas fa-user-shield text-xl text-yellow-400 mr-3"></i>
+                    <span class="font-semibold text-white">Gérer les Admins</span>
+                    <p class="text-xs text-gray-500 mt-1">{{ admins|length }} administrateurs.</p>
+                </button>
+                <a href="{{ url_for('auth_bp.logout') }}"
+                   class="block p-4 rounded-lg bg-gray-900 hover:bg-red-900 transition border border-transparent hover:border-red-500">
+                    <i class="fas fa-sign-out-alt text-xl text-red-500 mr-3"></i>
+                    <span class="font-semibold text-white">Déconnexion</span>
+                    <p class="text-xs text-gray-500 mt-1">Quitter la session.</p>
+                </a>
+            </div>
+        </div>
 
-    <!-- ==================== SECTION GESTION DES ADMINS ==================== -->
-    <section id="section-admins" class="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700">
-        <h2 class="text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-3 flex items-center">
-            <i class="fas fa-user-shield mr-3 text-yellow-400"></i> Gestion des Administrateurs
-        </h2>
+        <!-- ==================== ONGLET : PROPOSITIONS ==================== -->
+        <div id="panel-propositions" class="tab-panel hidden p-6">
+            {% if propositions %}
+            <div class="space-y-4">
+                {% for prop in propositions %}
+                <div class="p-5 bg-gray-900 rounded-xl border
+                    {% if prop.statut == 'en_attente' %}border-yellow-500/40
+                    {% elif prop.statut in ('accepte','modifie') %}border-green-500/30
+                    {% else %}border-red-500/30{% endif %}">
 
-        <!-- Liste des admins existants -->
-        <div class="mb-8">
-            <h3 class="text-lg font-semibold text-gray-300 mb-4">Comptes existants</h3>
+                    <div class="flex flex-col md:flex-row md:items-start gap-4">
+                        {% if prop.url_image %}
+                        <img src="{{ url_for('static', filename=prop.url_image) }}"
+                             class="w-20 h-20 rounded-lg object-cover flex-shrink-0">
+                        {% else %}
+                        <div class="w-20 h-20 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-star text-gray-500 text-2xl"></i>
+                        </div>
+                        {% endif %}
+
+                        <div class="flex-1">
+                            <div class="flex flex-wrap items-center gap-2 mb-1">
+                                <h3 class="font-bold text-white text-lg">{{ prop.nom_fr }}</h3>
+                                {% if prop.nom_scientifique %}<span class="text-xs text-gray-400 italic">{{ prop.nom_scientifique }}</span>{% endif %}
+                                {% if prop.statut == 'en_attente' %}
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400"><i class="fas fa-clock mr-1"></i>En attente</span>
+                                {% elif prop.statut == 'accepte' %}
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400"><i class="fas fa-check mr-1"></i>Acceptée</span>
+                                {% elif prop.statut == 'modifie' %}
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400"><i class="fas fa-edit mr-1"></i>Modifiée</span>
+                                {% elif prop.statut == 'refuse' %}
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400"><i class="fas fa-times mr-1"></i>Refusée</span>
+                                {% endif %}
+                            </div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <img src="{{ url_for('static', filename=prop.photo_profil) }}"
+                                     class="w-5 h-5 rounded-full object-cover"
+                                     onerror="this.src='{{ url_for('static', filename='uploads/profils/default_avatar.png') }}'">
+                                <span class="text-xs text-gray-400">
+                                    Par <strong class="text-accent">@{{ prop.pseudo }}</strong>
+                                    ({{ prop.prenom }} {{ prop.nom_user }})
+                                    · {{ prop.date_proposition.strftime('%d/%m/%Y %H:%M') }}
+                                    · <span class="text-gray-500">{{ prop.nom_categorie }}</span>
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-400 line-clamp-2">{{ prop.description }}</p>
+                            {% if prop.commentaire_admin %}
+                            <p class="text-xs text-gray-500 mt-1 italic"><i class="fas fa-comment-alt mr-1"></i>{{ prop.commentaire_admin }}</p>
+                            {% endif %}
+                        </div>
+
+                        {% if prop.statut == 'en_attente' %}
+                        <button onclick="toggleTraitement({{ prop.id_proposition }})"
+                                class="flex-shrink-0 px-4 py-2 bg-accent hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition">
+                            <i class="fas fa-gavel mr-1"></i> Traiter
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    {% if prop.statut == 'en_attente' %}
+                    <div id="traitement-{{ prop.id_proposition }}" class="hidden mt-4 pt-4 border-t border-gray-700">
+                        <form action="{{ url_for('admin_bp.traiter_proposition_route', prop_id=prop.id_proposition) }}"
+                              method="POST" class="space-y-4">
+                            <p class="text-sm font-medium text-gray-300">Modifier si nécessaire avant publication :</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Nom français</label>
+                                    <input type="text" name="nom_fr" value="{{ prop.nom_fr }}"
+                                           class="w-full p-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Nom scientifique</label>
+                                    <input type="text" name="nom_scientifique" value="{{ prop.nom_scientifique or '' }}"
+                                           class="w-full p-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs text-gray-400 mb-1">Description</label>
+                                    <textarea name="description" rows="3"
+                                              class="w-full p-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none resize-none">{{ prop.description }}</textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Commentaire pour l'utilisateur</label>
+                                    <input type="text" name="commentaire" placeholder="Ex: Très bon article !"
+                                           class="w-full p-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none">
+                                </div>
+                                <input type="hidden" name="category_id" value="{{ prop.fk_id_categorie }}">
+                            </div>
+                            <div class="flex gap-3 flex-wrap">
+                                <button type="submit" name="statut" value="accepte"
+                                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition flex items-center gap-1">
+                                    <i class="fas fa-check"></i> Accepter
+                                </button>
+                                <button type="submit" name="statut" value="modifie"
+                                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition flex items-center gap-1">
+                                    <i class="fas fa-edit"></i> Accepter modifié
+                                </button>
+                                <button type="submit" name="statut" value="refuse"
+                                        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition flex items-center gap-1">
+                                    <i class="fas fa-times"></i> Refuser
+                                </button>
+                                <button type="button" onclick="toggleTraitement({{ prop.id_proposition }})"
+                                        class="px-4 py-2 bg-gray-700 text-gray-300 text-sm rounded-lg hover:bg-gray-600 transition">
+                                    Annuler
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-16 text-gray-500">
+                <i class="fas fa-inbox text-5xl mb-4"></i>
+                <p class="text-lg">Aucune proposition pour le moment.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ==================== ONGLET : UTILISATEURS ==================== -->
+        <div id="panel-utilisateurs" class="tab-panel hidden p-6">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-900 text-gray-400 uppercase text-xs tracking-wider">
+                            <th class="p-4 border-b border-gray-700">Utilisateur</th>
+                            <th class="p-4 border-b border-gray-700">Email</th>
+                            <th class="p-4 border-b border-gray-700 text-center">Propositions</th>
+                            <th class="p-4 border-b border-gray-700">Inscrit le</th>
+                            <th class="p-4 border-b border-gray-700 text-right">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-300">
+                        {% for u in utilisateurs %}
+                        <tr class="border-b border-gray-700 hover:bg-gray-700/30 transition">
+                            <td class="p-4">
+                                <div class="flex items-center gap-3">
+                                    <img src="{{ url_for('static', filename=u.photo_profil) }}"
+                                         class="w-8 h-8 rounded-full object-cover"
+                                         onerror="this.src='{{ url_for('static', filename='uploads/profils/default_avatar.png') }}'">
+                                    <div>
+                                        <p class="font-medium text-white text-sm">{{ u.prenom }} {{ u.nom }}</p>
+                                        <p class="text-xs text-accent">@{{ u.pseudo }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="p-4 text-sm text-gray-400">{{ u.email }}</td>
+                            <td class="p-4 text-center">
+                                <span class="px-2 py-0.5 rounded-full bg-gray-700 text-xs">{{ u.nb_propositions }}</span>
+                            </td>
+                            <td class="p-4 text-xs text-gray-500">{{ u.date_inscription.strftime('%d/%m/%Y') }}</td>
+                            <td class="p-4 text-right">
+                                <form action="{{ url_for('admin_bp.toggle_user', user_id=u.id_utilisateur) }}" method="POST" class="inline">
+                                    <button type="submit"
+                                            onclick="return confirm('{% if u.est_actif %}Désactiver{% else %}Réactiver{% endif %} @{{ u.pseudo }} ?')"
+                                            class="px-3 py-1 text-xs font-semibold rounded-lg transition
+                                            {% if u.est_actif %}bg-green-500/20 text-green-400 hover:bg-red-600 hover:text-white
+                                            {% else %}bg-red-500/20 text-red-400 hover:bg-green-600 hover:text-white{% endif %}">
+                                        {% if u.est_actif %}<i class="fas fa-check-circle mr-1"></i>Actif
+                                        {% else %}<i class="fas fa-ban mr-1"></i>Inactif{% endif %}
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="p-8 text-center text-gray-500 italic">Aucun utilisateur inscrit.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ==================== ONGLET : ADMINISTRATEURS ==================== -->
+        <div id="panel-admins" class="tab-panel hidden p-6 space-y-4">
+
+            <!-- Liste admins -->
             <div class="space-y-3">
                 {% for adm in admins %}
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-gray-900 rounded-lg border border-gray-700"
-                     id="admin-row-{{ adm.id_admin }}">
-
-                    <!-- Infos admin -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-gray-900 rounded-lg border border-gray-700">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                        <div class="w-9 h-9 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
                             <i class="fas fa-user text-yellow-400 text-sm"></i>
                         </div>
                         <div>
@@ -102,321 +294,284 @@
                                 <span class="ml-2 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Vous</span>
                                 {% endif %}
                             </p>
-                            <p class="text-xs text-gray-500">
-                                @{{ adm.pseudo }}
-                                {% if adm.email %} · {{ adm.email }}{% endif %}
-                                · ID : {{ adm.id_admin }}
-                            </p>
+                            <p class="text-xs text-gray-500">@{{ adm.pseudo }}{% if adm.email %} · {{ adm.email }}{% endif %} · ID : {{ adm.id_admin }}</p>
                         </div>
                     </div>
-
-                    <!-- Actions (masquées pour le compte courant) -->
                     {% if adm.id_admin != session.admin_id %}
                     <div class="flex gap-2 flex-shrink-0">
-                        <!-- Bouton Modifier → ouvre le formulaire inline -->
                         <button onclick="toggleEditForm({{ adm.id_admin }})"
                                 class="px-3 py-2 text-sm bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg transition flex items-center gap-1">
                             <i class="fas fa-edit"></i> Modifier
                         </button>
-
-                        <!-- Bouton Supprimer -->
-                        <form action="{{ url_for('admin_bp.delete_admin', admin_id=adm.id_admin) }}"
-                              method="POST"
-                              onsubmit="return confirm('Supprimer l\'administrateur {{ adm.pseudo }} ? Cette action est irréversible.');">
-                            <button type="submit"
-                                    class="px-3 py-2 text-sm bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition flex items-center gap-1">
+                        <form action="{{ url_for('admin_bp.delete_admin', admin_id=adm.id_admin) }}" method="POST"
+                              onsubmit="return confirm('Supprimer {{ adm.pseudo }} ?');">
+                            <button type="submit" class="px-3 py-2 text-sm bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition flex items-center gap-1">
                                 <i class="fas fa-trash"></i> Supprimer
                             </button>
                         </form>
                     </div>
                     {% else %}
-                    <p class="text-xs text-gray-600 italic">Votre compte actif — non modifiable ici</p>
+                    <p class="text-xs text-gray-600 italic">Votre compte actif</p>
                     {% endif %}
                 </div>
 
-                <!-- Formulaire de modification inline (caché par défaut) -->
                 {% if adm.id_admin != session.admin_id %}
-                <div id="edit-form-{{ adm.id_admin }}" class="hidden mt-1 p-5 bg-gray-900/80 border border-blue-500/30 rounded-lg">
+                <div id="edit-form-{{ adm.id_admin }}" class="hidden p-5 bg-gray-900/80 border border-blue-500/30 rounded-lg">
                     <form action="{{ url_for('admin_bp.edit_admin', admin_id=adm.id_admin) }}" method="POST"
                           class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-medium text-gray-400 mb-1">Prénom <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-gray-400 mb-1">Prénom *</label>
                             <input type="text" name="prenom" value="{{ adm.prenom }}" required
                                    class="w-full p-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-gray-400 mb-1">Nom <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-gray-400 mb-1">Nom *</label>
                             <input type="text" name="nom" value="{{ adm.nom }}" required
                                    class="w-full p-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-gray-400 mb-1">Pseudo <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-gray-400 mb-1">Pseudo *</label>
                             <input type="text" name="pseudo" value="{{ adm.pseudo }}" required
                                    class="w-full p-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-gray-400 mb-1">Email <span class="text-red-400">*</span></label>
+                            <label class="block text-xs text-gray-400 mb-1">Email *</label>
                             <input type="email" name="email" value="{{ adm.email }}" required
                                    class="w-full p-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-xs font-medium text-gray-400 mb-1">
-                                Nouveau mot de passe <span class="text-gray-600">(laisser vide pour ne pas changer)</span>
-                            </label>
+                            <label class="block text-xs text-gray-400 mb-1">Nouveau mot de passe <span class="text-gray-600">(vide = inchangé)</span></label>
                             <input type="password" name="new_password" placeholder="Min. 6 caractères"
                                    class="w-full p-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none">
                         </div>
                         <div class="md:col-span-2 flex gap-3">
-                            <button type="submit"
-                                    class="px-4 py-2 text-sm bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
+                            <button type="submit" class="px-4 py-2 text-sm bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
                                 <i class="fas fa-save mr-1"></i> Enregistrer
                             </button>
                             <button type="button" onclick="toggleEditForm({{ adm.id_admin }})"
-                                    class="px-4 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition">
-                                Annuler
-                            </button>
+                                    class="px-4 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition">Annuler</button>
                         </div>
                     </form>
                 </div>
                 {% endif %}
                 {% endfor %}
             </div>
-        </div>
 
-        <!-- Formulaire de création d'un nouvel admin -->
-        <div class="border-t border-gray-700 pt-6">
-            <h3 class="text-lg font-semibold text-gray-300 mb-4 flex items-center gap-2">
-                <i class="fas fa-user-plus text-green-400"></i> Créer un nouvel administrateur
-            </h3>
-            <form action="{{ url_for('admin_bp.add_admin') }}" method="POST"
-                  class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Prénom <span class="text-red-400">*</span></label>
-                    <input type="text" name="prenom" required placeholder="ex: Jean"
-                           class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Nom <span class="text-red-400">*</span></label>
-                    <input type="text" name="nom" required placeholder="ex: Dupont"
-                           class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Pseudo <span class="text-red-400">*</span></label>
-                    <input type="text" name="pseudo" required placeholder="ex: jdupont"
-                           class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Email <span class="text-red-400">*</span></label>
-                    <input type="email" name="email" required placeholder="ex: j.dupont@astrolearn.fr"
-                           class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition">
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Mot de passe <span class="text-red-400">*</span></label>
-                    <div class="relative">
-                        <input type="password" name="password" id="new-admin-pwd" required placeholder="Min. 6 caractères"
-                               class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition pr-10">
-                        <button type="button" onclick="togglePwdVisibility('new-admin-pwd', 'pwd-eye-icon')"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition">
-                            <i class="fas fa-eye" id="pwd-eye-icon"></i>
+            <!-- Créer un admin -->
+            <div class="border-t border-gray-700 pt-6">
+                <h3 class="text-lg font-semibold text-gray-300 mb-4 flex items-center gap-2">
+                    <i class="fas fa-user-plus text-green-400"></i> Créer un nouvel administrateur
+                </h3>
+                <form action="{{ url_for('admin_bp.add_admin') }}" method="POST"
+                      class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Prénom *</label>
+                        <input type="text" name="prenom" required placeholder="Jean"
+                               class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Nom *</label>
+                        <input type="text" name="nom" required placeholder="Dupont"
+                               class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Pseudo *</label>
+                        <input type="text" name="pseudo" required placeholder="jdupont"
+                               class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Email *</label>
+                        <input type="email" name="email" required placeholder="j.dupont@astrolearn.fr"
+                               class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Mot de passe *</label>
+                        <div class="relative">
+                            <input type="password" name="password" id="new-admin-pwd" required placeholder="Min. 6 caractères"
+                                   class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition pr-10"
+                                   oninput="checkAdminPwd()">
+                            <button type="button" onclick="togglePwdVisibility('new-admin-pwd','pwd-eye-icon')"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                                <i class="fas fa-eye" id="pwd-eye-icon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Confirmer *</label>
+                        <div class="relative">
+                            <input type="password" name="password_confirm" id="new-admin-pwd2" required placeholder="Répétez"
+                                   class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition pr-10"
+                                   oninput="checkAdminPwd()">
+                            <button type="button" onclick="togglePwdVisibility('new-admin-pwd2','pwd-eye-icon2')"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                                <i class="fas fa-eye" id="pwd-eye-icon2"></i>
+                            </button>
+                        </div>
+                        <p id="pwd-match-msg" class="text-xs mt-1 hidden"></p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit"
+                                class="px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                            <i class="fas fa-user-plus"></i> Créer l'administrateur
                         </button>
                     </div>
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Confirmer le mot de passe <span class="text-red-400">*</span></label>
-                    <div class="relative">
-                        <input type="password" name="password_confirm" id="new-admin-pwd-confirm" required placeholder="Répétez le mot de passe"
-                               class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition pr-10">
-                        <button type="button" onclick="togglePwdVisibility('new-admin-pwd-confirm', 'pwd-confirm-eye-icon')"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition">
-                            <i class="fas fa-eye" id="pwd-confirm-eye-icon"></i>
-                        </button>
-                    </div>
-                    <p id="pwd-match-msg" class="text-xs mt-1 hidden"></p>
-                </div>
-
-                <div class="md:col-span-2">
-                    <button type="submit"
-                            class="px-6 py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition duration-200 flex items-center gap-2">
-                        <i class="fas fa-user-plus"></i> Créer l'administrateur
-                    </button>
-                </div>
-
-            </form>
-        </div>
-    </section>
-    <!-- ==================== FIN SECTION ADMINS ==================== -->
-
-    <hr class="border-gray-700">
-
-    <!-- Liste des objets du catalogue -->
-    <section class="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700">
-        <h2 class="text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-3 flex items-center">
-            <i class="fas fa-list mr-3 text-accent"></i> Liste des Objets au Catalogue
-        </h2>
-
-        <div class="mb-6 flex flex-col md:flex-row gap-4">
-            <div class="relative flex-grow">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                    <i class="fas fa-search"></i>
-                </span>
-                <input type="text" id="searchInput" placeholder="Rechercher un nom ou une catégorie..."
-                       class="w-full bg-gray-900 border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:border-accent transition">
+                </form>
             </div>
-            <select id="categoryFilter" class="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-accent transition">
-                <option value="">Toutes les catégories</option>
-                {% set categories_seen = [] %}
-                {% for obj in objects %}
-                    {% if obj.nom_categorie not in categories_seen %}
-                        <option value="{{ obj.nom_categorie }}">{{ obj.nom_categorie }}</option>
-                        {% set _ = categories_seen.append(obj.nom_categorie) %}
-                    {% endif %}
-                {% endfor %}
-            </select>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-gray-900 text-gray-400 uppercase text-xs tracking-wider">
-                        <th class="p-4 border-b border-gray-700">Nom</th>
-                        <th class="p-4 border-b border-gray-700">Catégorie</th>
-                        <th class="p-4 border-b border-gray-700">Date</th>
-                        <th class="p-4 border-b border-gray-700 text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="text-gray-300">
+        <!-- ==================== ONGLET : CATALOGUE ==================== -->
+        <div id="panel-catalogue" class="tab-panel hidden p-6">
+            <div class="mb-4 flex flex-col md:flex-row gap-4">
+                <div class="relative flex-grow">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500"><i class="fas fa-search"></i></span>
+                    <input type="text" id="searchInput" placeholder="Rechercher..."
+                           class="w-full bg-gray-900 border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:border-accent transition">
+                </div>
+                <select id="categoryFilter" class="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-accent transition">
+                    <option value="">Toutes les catégories</option>
+                    {% set categories_seen = [] %}
                     {% for obj in objects %}
-                    <tr class="border-b border-gray-700 hover:bg-gray-700/30 transition">
-                        <td class="p-4 font-medium text-white">{{ obj.nom_fr }}</td>
-                        <td class="p-4">
-                            <span class="px-2 py-1 rounded-md bg-accent/10 text-accent text-xs">
-                                {{ obj.nom_categorie }}
-                            </span>
-                        </td>
-                        <td class="p-4 text-sm text-gray-500">{{ obj.date_publication }}</td>
-                        <td class="p-4 text-right">
-                            <div class="flex justify-end space-x-2">
-                                <a href="{{ url_for('admin_bp.edit_celestial_object', object_id=obj.id_objet) }}"
-                                   class="p-2 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg transition"
-                                   title="Modifier">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ url_for('admin_bp.delete_celestial_object', object_id=obj.id_objet) }}"
-                                      method="POST"
-                                      onsubmit="return confirm('Voulez-vous vraiment supprimer {{ obj.nom_fr }} ?');"
-                                      class="inline">
-                                    <button type="submit"
-                                            class="p-2 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition"
-                                            title="Supprimer">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="4" class="p-8 text-center text-gray-500 italic">
-                            Aucun objet trouvé dans la base de données.
-                        </td>
-                    </tr>
+                        {% if obj.nom_categorie not in categories_seen %}
+                            <option value="{{ obj.nom_categorie }}">{{ obj.nom_categorie }}</option>
+                            {% set _ = categories_seen.append(obj.nom_categorie) %}
+                        {% endif %}
                     {% endfor %}
-                </tbody>
-            </table>
+                </select>
+                <a href="{{ url_for('admin_bp.add_celestial_object') }}"
+                   class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition flex items-center gap-2 whitespace-nowrap">
+                    <i class="fas fa-plus"></i> Ajouter
+                </a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-900 text-gray-400 uppercase text-xs tracking-wider">
+                            <th class="p-4 border-b border-gray-700">Nom</th>
+                            <th class="p-4 border-b border-gray-700">Catégorie</th>
+                            <th class="p-4 border-b border-gray-700">Date</th>
+                            <th class="p-4 border-b border-gray-700 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-300">
+                        {% for obj in objects %}
+                        <tr class="border-b border-gray-700 hover:bg-gray-700/30 transition">
+                            <td class="p-4 font-medium text-white">{{ obj.nom_fr }}</td>
+                            <td class="p-4"><span class="px-2 py-1 rounded-md bg-accent/10 text-accent text-xs">{{ obj.nom_categorie }}</span></td>
+                            <td class="p-4 text-sm text-gray-500">{{ obj.date_publication }}</td>
+                            <td class="p-4 text-right">
+                                <div class="flex justify-end gap-2">
+                                    <a href="{{ url_for('admin_bp.edit_celestial_object', object_id=obj.id_objet) }}"
+                                       class="p-2 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg transition" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ url_for('admin_bp.delete_celestial_object', object_id=obj.id_objet) }}" method="POST"
+                                          onsubmit="return confirm('Supprimer {{ obj.nom_fr }} ?');" class="inline">
+                                        <button type="submit" class="p-2 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition" title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="p-8 text-center text-gray-500 italic">Aucun objet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </section>
 
+    </div><!-- fin onglets -->
 </div>
 
+<style>
+.tab-btn {
+    color: #9ca3af;
+    border-bottom: 3px solid transparent;
+}
+.tab-btn:hover {
+    color: #ffffff;
+    background: rgba(255,255,255,0.04);
+}
+.active-tab {
+    color: #ffffff;
+    border-bottom: 3px solid #FF8811;
+    background: rgba(255,136,17,0.08);
+}
+</style>
+
 <script>
-// ---- Filtre du tableau d'objets ----
-document.addEventListener('DOMContentLoaded', function () {
+const TABS = ['actions', 'propositions', 'utilisateurs', 'admins', 'catalogue'];
+
+function switchTab(name) {
+    TABS.forEach(t => {
+        document.getElementById('panel-' + t).classList.add('hidden');
+        document.getElementById('tab-' + t).classList.remove('active-tab');
+    });
+    document.getElementById('panel-' + name).classList.remove('hidden');
+    document.getElementById('tab-' + name).classList.add('active-tab');
+    // Mémorise l'onglet actif dans l'URL sans recharger
+    history.replaceState(null, '', '#' + name);
+}
+
+// Restaurer l'onglet depuis l'URL au chargement
+document.addEventListener('DOMContentLoaded', () => {
+    const hash = window.location.hash.replace('#', '');
+    if (TABS.includes(hash)) switchTab(hash);
+
+    // Filtre catalogue
     const searchInput = document.getElementById('searchInput');
     const categoryFilter = document.getElementById('categoryFilter');
     const tableRows = document.querySelectorAll('tbody tr');
 
     function filterTable() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const categoryTerm = categoryFilter.value.toLowerCase();
+        const s = searchInput.value.toLowerCase();
+        const c = categoryFilter.value.toLowerCase();
         tableRows.forEach(row => {
-            const nameCell = row.querySelector('td:nth-child(1)');
-            const catCell = row.querySelector('td:nth-child(2)');
-            if (!nameCell || !catCell) return;
-            const name = nameCell.textContent.toLowerCase();
-            const category = catCell.textContent.toLowerCase();
-            const matchesSearch = name.includes(searchTerm) || category.includes(searchTerm);
-            const matchesCategory = categoryTerm === "" || category.includes(categoryTerm);
-            row.style.display = (matchesSearch && matchesCategory) ? "" : "none";
+            const n = row.querySelector('td:nth-child(1)')?.textContent.toLowerCase() || '';
+            const cat = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+            row.style.display = (n.includes(s) || cat.includes(s)) && (c === '' || cat.includes(c)) ? '' : 'none';
         });
     }
-
-    searchInput.addEventListener('keyup', filterTable);
-    categoryFilter.addEventListener('change', filterTable);
+    searchInput?.addEventListener('keyup', filterTable);
+    categoryFilter?.addEventListener('change', filterTable);
 });
 
-// ---- Toggle formulaire de modification admin ----
+function toggleTraitement(propId) {
+    document.getElementById('traitement-' + propId)?.classList.toggle('hidden');
+}
+
 function toggleEditForm(adminId) {
     const form = document.getElementById('edit-form-' + adminId);
     if (!form) return;
     form.classList.toggle('hidden');
-    // Scroll vers le formulaire si on l'ouvre
-    if (!form.classList.contains('hidden')) {
-        form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
+    if (!form.classList.contains('hidden')) form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// ---- Afficher/masquer le mot de passe ----
 function togglePwdVisibility(inputId, iconId) {
     const input = document.getElementById(inputId);
     const icon = document.getElementById(iconId);
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    input.type = input.type === 'password' ? 'text' : 'password';
+    icon.classList.toggle('fa-eye');
+    icon.classList.toggle('fa-eye-slash');
+}
+
+function checkAdminPwd() {
+    const p1 = document.getElementById('new-admin-pwd').value;
+    const p2 = document.getElementById('new-admin-pwd2').value;
+    const msg = document.getElementById('pwd-match-msg');
+    const i2  = document.getElementById('new-admin-pwd2');
+    if (!p2) { msg.classList.add('hidden'); return; }
+    msg.classList.remove('hidden');
+    if (p1 === p2) {
+        msg.textContent = '✓ Les mots de passe correspondent';
+        msg.className = 'text-xs mt-1 text-green-400';
+        i2.classList.remove('border-red-500'); i2.classList.add('border-green-500');
     } else {
-        input.type = 'password';
-        icon.classList.replace('fa-eye-slash', 'fa-eye');
+        msg.textContent = '✗ Ne correspondent pas';
+        msg.className = 'text-xs mt-1 text-red-400';
+        i2.classList.remove('border-green-500'); i2.classList.add('border-red-500');
     }
-}
-
-// ---- Vérification temps réel correspondance mots de passe ----
-const pwdInput        = document.getElementById('new-admin-pwd');
-const pwdConfirm      = document.getElementById('new-admin-pwd-confirm');
-const pwdMatchMsg     = document.getElementById('pwd-match-msg');
-
-function checkPasswordMatch() {
-    if (!pwdConfirm.value) {
-        pwdMatchMsg.classList.add('hidden');
-        pwdConfirm.classList.remove('border-green-500', 'border-red-500');
-        return;
-    }
-    pwdMatchMsg.classList.remove('hidden');
-    if (pwdInput.value === pwdConfirm.value) {
-        pwdMatchMsg.textContent = '✓ Les mots de passe correspondent';
-        pwdMatchMsg.className = 'text-xs mt-1 text-green-400';
-        pwdConfirm.classList.remove('border-red-500');
-        pwdConfirm.classList.add('border-green-500');
-    } else {
-        pwdMatchMsg.textContent = '✗ Les mots de passe ne correspondent pas';
-        pwdMatchMsg.className = 'text-xs mt-1 text-red-400';
-        pwdConfirm.classList.remove('border-green-500');
-        pwdConfirm.classList.add('border-red-500');
-    }
-}
-
-if (pwdInput && pwdConfirm) {
-    pwdInput.addEventListener('input', checkPasswordMatch);
-    pwdConfirm.addEventListener('input', checkPasswordMatch);
-}
-
-// ---- Scroll auto vers la section admins si ancre dans l'URL ----
-if (window.location.hash === '#section-admins') {
-    document.getElementById('section-admins')?.scrollIntoView({ behavior: 'smooth' });
 }
 </script>
 {% endblock content %}

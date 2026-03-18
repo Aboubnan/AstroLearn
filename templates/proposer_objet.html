@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-2xl mx-auto my-10 p-8 bg-gray-800 rounded-xl shadow-2xl border border-gray-700">
+
+    <div class="mb-6">
+        <a href="{{ url_for('user_bp.dashboard') }}" class="text-gray-400 hover:text-white text-sm flex items-center gap-1">
+            <i class="fas fa-arrow-left"></i> Retour à mon espace
+        </a>
+    </div>
+
+    <div class="text-center mb-8">
+        <i class="fas fa-star text-5xl text-accent mb-3"></i>
+        <h1 class="text-3xl font-bold text-white">Proposer un objet</h1>
+        <p class="text-gray-400 mt-2">Votre proposition sera examinée par un administrateur avant publication.</p>
+        <p class="text-sm text-accent mt-1">Une fois acceptée, elle apparaîtra avec votre pseudo : <strong>@{{ session.user_pseudo }}</strong></p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for category, message in messages %}
+        <div class="mb-4 p-3 rounded-lg text-sm font-medium
+            {% if category == 'error' %}bg-red-500/20 text-red-400 border border-red-500/30
+            {% elif category == 'success' %}bg-green-500/20 text-green-400 border border-green-500/30
+            {% else %}bg-yellow-500/20 text-yellow-400 border border-yellow-500/30{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}{% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('user_bp.proposer_objet') }}"
+          enctype="multipart/form-data" class="space-y-5">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Nom (français) <span class="text-red-400">*</span></label>
+                <input type="text" name="nom_fr" required placeholder="ex: Nébuleuse d'Orion"
+                       class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none transition">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Nom scientifique</label>
+                <input type="text" name="nom_scientifique" placeholder="ex: Messier 42"
+                       class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none transition">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Catégorie <span class="text-red-400">*</span></label>
+            <select name="category_id" required
+                    class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none transition">
+                <option value="">-- Sélectionnez une catégorie --</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id_categorie }}">{{ cat.nom_categorie }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Description <span class="text-red-400">*</span></label>
+            <textarea name="description" required rows="5"
+                      placeholder="Décrivez cet objet céleste : caractéristiques, particularités, intérêt scientifique..."
+                      class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-accent focus:outline-none transition resize-none"></textarea>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Image <span class="text-gray-500">(optionnel)</span></label>
+            <div id="drop-zone"
+                 class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-accent transition"
+                 onclick="document.getElementById('img-input').click()">
+                <div id="drop-content">
+                    <i class="fas fa-cloud-upload-alt text-3xl text-gray-500 mb-2"></i>
+                    <p class="text-gray-400 text-sm">Glissez une image ici ou <span class="text-accent">cliquez pour parcourir</span></p>
+                    <p class="text-gray-600 text-xs mt-1">PNG, JPG, WEBP · Max 5 Mo</p>
+                </div>
+                <img id="img-preview" class="hidden max-h-40 mx-auto rounded-lg mt-2">
+            </div>
+            <input type="file" name="image" id="img-input" accept="image/*" class="hidden" onchange="previewImg(this)">
+        </div>
+
+        <div class="flex gap-3 pt-2">
+            <button type="submit"
+                    class="flex-1 py-3 bg-accent hover:bg-orange-600 text-white font-bold rounded-lg transition flex items-center justify-center gap-2">
+                <i class="fas fa-paper-plane"></i> Envoyer ma proposition
+            </button>
+            <a href="{{ url_for('user_bp.dashboard') }}"
+               class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition flex items-center gap-2">
+                Annuler
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+function previewImg(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('drop-content').classList.add('hidden');
+            const img = document.getElementById('img-preview');
+            img.src = e.target.result;
+            img.classList.remove('hidden');
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+{% endblock content %}

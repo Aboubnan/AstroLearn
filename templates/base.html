@@ -6,35 +6,70 @@
     <title>{% block title %}{{ title }}{% endblock title %} | AstroLearn</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    
     <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot_widget.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"> 
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 </head>
 
 <body class="min-h-screen flex flex-col">
     <header class="bg-gray-900 shadow-lg sticky top-0 z-50 text-white">
     <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-        
-        <a href="{{ url_for('main_bp.index') }}" class="flex items-center space-x-2 shrink-0"> 
+
+        <a href="{{ url_for('main_bp.index') }}" class="flex items-center space-x-2 shrink-0">
             <img src="{{ url_for('static', filename='images/logo.png') }}" alt="AstroLearn Logo" class="h-24 w-24 sm:h-40 sm:w-40">
             <span class="text-xl sm:text-2xl font-bold">AstroLearn</span>
         </a>
 
+        <!-- Navigation Desktop -->
         <div class="hidden md:flex items-center space-x-6">
             <a href="{{ url_for('main_bp.index') }}" class="hover:text-blue-400 transition">Accueil</a>
             <a href="{{ url_for('main_bp.catalogue') }}" class="hover:text-blue-400 transition">Encyclopédie</a>
             <a href="{{ url_for('skymap.sky_map') }}" class="hover:text-blue-400 transition">Système Solaire</a>
             <a href="{{ url_for('main_bp.formulaire') }}" class="hover:text-blue-400 transition">Sondage</a>
-            
+
             {% if session.get('is_admin') %}
-                <a href="{{ url_for('admin_bp.admin_dashboard') }}" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded-full text-xs font-bold transition">Tableau de Bord Admin</a>
-                <a href="{{ url_for('admin_bp.admin_logout') }}" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded-full text-xs font-bold transition">Déconnexion</a>
+                <!-- Admin connecté -->
+                <a href="{{ url_for('admin_bp.admin_dashboard') }}"
+                   class="bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1">
+                    <i class="fas fa-user-shield"></i> Admin
+                </a>
+                <a href="{{ url_for('auth_bp.logout') }}"
+                   class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded-full text-xs font-bold transition">
+                    Déconnexion
+                </a>
+
+            {% elif session.get('user_id') %}
+                <!-- Utilisateur connecté -->
+                <a href="{{ url_for('user_bp.proposer_objet') }}"
+                   class="hover:text-blue-400 transition text-sm">
+                    <i class="fas fa-plus-circle mr-1"></i>Proposer
+                </a>
+                <a href="{{ url_for('user_bp.dashboard') }}"
+                   class="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-full text-xs font-bold transition">
+                    <img src="{{ url_for('static', filename=session.get('user_photo', 'uploads/profils/default_avatar.png')) }}"
+                         alt="avatar"
+                         class="w-5 h-5 rounded-full object-cover"
+                         onerror="this.src='{{ url_for('static', filename='uploads/profils/default_avatar.png') }}'">
+                    @{{ session.get('user_pseudo') }}
+                </a>
+                <a href="{{ url_for('auth_bp.logout') }}"
+                   class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded-full text-xs font-bold transition">
+                    Déconnexion
+                </a>
+
             {% else %}
-                <a href="{{ url_for('admin_bp.admin_login') }}" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded-full text-xs font-bold transition">Connexion Admin</a>
+                <!-- Non connecté -->
+                <a href="{{ url_for('auth_bp.login') }}"
+                   class="bg-accent hover:bg-orange-600 px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1">
+                    <i class="fas fa-sign-in-alt"></i> Connexion
+                </a>
+                <a href="{{ url_for('user_bp.inscription') }}"
+                   class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-full text-xs font-bold transition">
+                    S'inscrire
+                </a>
             {% endif %}
         </div>
 
+        <!-- Burger mobile -->
         <div class="md:hidden">
             <button id="mobile-menu-button" class="text-2xl focus:outline-none">
                 <i class="fas fa-bars"></i>
@@ -42,6 +77,7 @@
         </div>
     </nav>
 
+    <!-- Menu Mobile -->
     <div id="mobile-menu" class="hidden md:hidden bg-gray-800 border-t border-gray-700">
         <div class="flex flex-col space-y-4 px-6 py-4">
             <a href="{{ url_for('main_bp.index') }}" class="hover:text-blue-400">Accueil</a>
@@ -49,11 +85,41 @@
             <a href="{{ url_for('skymap.sky_map') }}" class="hover:text-blue-400">Système Solaire</a>
             <a href="{{ url_for('main_bp.formulaire') }}" class="hover:text-blue-400">Sondage & Avis</a>
             <hr class="border-gray-700">
+
             {% if session.get('is_admin') %}
-                <a href="{{ url_for('admin_bp.admin_dashboard') }}" class="text-green-400">Tableau de bord Admin</a>
-                <a href="{{ url_for('admin_bp.admin_logout') }}" class="text-red-400">Déconnexion</a>
+                <a href="{{ url_for('admin_bp.admin_dashboard') }}" class="text-yellow-400 font-semibold flex items-center gap-2">
+                    <i class="fas fa-user-shield"></i> Tableau de bord Admin
+                </a>
+                <a href="{{ url_for('auth_bp.logout') }}" class="text-red-400">Déconnexion</a>
+
+            {% elif session.get('user_id') %}
+                <div class="flex items-center gap-3 py-1">
+                    <img src="{{ url_for('static', filename=session.get('user_photo', 'uploads/profils/default_avatar.png')) }}"
+                         alt="avatar"
+                         class="w-8 h-8 rounded-full object-cover border border-gray-600"
+                         onerror="this.src='{{ url_for('static', filename='uploads/profils/default_avatar.png') }}'">
+                    <span class="text-accent font-semibold">@{{ session.get('user_pseudo') }}</span>
+                </div>
+                <a href="{{ url_for('user_bp.dashboard') }}" class="text-gray-300 hover:text-white flex items-center gap-2">
+                    <i class="fas fa-tachometer-alt"></i> Mon espace
+                </a>
+                <a href="{{ url_for('user_bp.proposer_objet') }}" class="text-gray-300 hover:text-white flex items-center gap-2">
+                    <i class="fas fa-plus-circle"></i> Proposer un objet
+                </a>
+                <a href="{{ url_for('user_bp.edit_profil') }}" class="text-gray-300 hover:text-white flex items-center gap-2">
+                    <i class="fas fa-cog"></i> Mon profil
+                </a>
+                <a href="{{ url_for('auth_bp.logout') }}" class="text-red-400 flex items-center gap-2">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+
             {% else %}
-                <a href="{{ url_for('admin_bp.admin_login') }}" class="text-gray-300">Connexion Admin</a>
+                <a href="{{ url_for('auth_bp.login') }}" class="text-accent font-semibold flex items-center gap-2">
+                    <i class="fas fa-sign-in-alt"></i> Connexion
+                </a>
+                <a href="{{ url_for('user_bp.inscription') }}" class="text-blue-400 flex items-center gap-2">
+                    <i class="fas fa-user-plus"></i> S'inscrire
+                </a>
             {% endif %}
         </div>
     </div>
@@ -64,7 +130,11 @@
             {% if messages %}
                 <ul class="space-y-2 mb-4">
                 {% for category, message in messages %}
-                    <li class="p-3 rounded-lg shadow-md {% if category == 'error' %}bg-red-800 text-white{% elif category == 'success' %}bg-green-800 text-white{% else %}bg-blue-800 text-white{% endif %} transition duration-300">
+                    <li class="p-3 rounded-lg shadow-md
+                        {% if category == 'error' %}bg-red-800 text-white
+                        {% elif category == 'success' %}bg-green-800 text-white
+                        {% else %}bg-blue-800 text-white{% endif %}
+                        transition duration-300">
                         {{ message }}
                     </li>
                 {% endfor %}
@@ -81,46 +151,33 @@
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-gray-400">
             <p>&copy; {{ current_year | default('2025') }} AstroLearn. Tous droits réservés.</p>
             <p class="mt-2">
-                <a href="{{ url_for('main_bp.legal') }}#confidentialite" class="hover:text-blue-400 transition">Confidentialité</a> | 
+                <a href="{{ url_for('main_bp.legal') }}#confidentialite" class="hover:text-blue-400 transition">Confidentialité</a> |
                 <a href="{{ url_for('main_bp.legal') }}#conditions" class="hover:text-blue-400 transition">Conditions d'Utilisation</a>
             </p>
         </div>
     </footer>
 
-    <!-- ==================== CHATBOT WIDGET AMÉLIORÉ ==================== -->
+    <!-- ==================== CHATBOT WIDGET ==================== -->
     <div id="chatbot-widget">
-        <!-- Bouton d'ouverture flottant -->
         <button id="chatbot-open-btn" title="Discuter avec AstroIA" class="hover:scale-110 transition-transform">
-            <img src="{{ url_for('static', filename='images/chatbot2.png') }}" 
-                alt="AstroIA" 
-                class="w-24 h-24 sm:w-32 sm:h-32 object-contain"> 
+            <img src="{{ url_for('static', filename='images/chatbot2.png') }}"
+                 alt="AstroIA"
+                 class="w-24 h-24 sm:w-32 sm:h-32 object-contain">
         </button>
 
-        <!-- Fenêtre du chatbot -->
         <div id="chatbot-window" class="hidden">
-            <!-- En-tête -->
             <div class="chatbot-header" style="position: relative;">
-                AstroIA 
+                AstroIA
                 <button id="chatbot-clear-btn" title="Effacer l'historique">
                     <i class="fas fa-trash-alt"></i>
                 </button>
                 <button id="chatbot-close-btn">&times;</button>
             </div>
-
-            <!-- Zone de messages -->
-            <div id="chatbot-messages">
-                <!-- Les messages seront ajoutés dynamiquement par JavaScript -->
-            </div>
-
-            <!-- Formulaire de saisie -->
+            <div id="chatbot-messages"></div>
             <form id="chatbot-form">
-                <input 
-                    type="text" 
-                    id="chatbot-input" 
-                    placeholder="Posez votre question sur l'astronomie..."
-                    autocomplete="off"
-                    maxlength="500"
-                >
+                <input type="text" id="chatbot-input"
+                       placeholder="Posez votre question sur l'astronomie..."
+                       autocomplete="off" maxlength="500">
                 <button type="submit" aria-label="Envoyer" title="Envoyer (Entrée)">
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -133,10 +190,7 @@
     <script>
     const btn = document.getElementById('mobile-menu-button');
     const menu = document.getElementById('mobile-menu');
-
-    btn.addEventListener('click', () => {
-        menu.classList.toggle('hidden');
-    });
-</script>
+    btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+    </script>
 </body>
 </html>
