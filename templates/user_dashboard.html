@@ -1,6 +1,8 @@
+{% from 'favori_btn.html' import favori_script %}
 {% extends "base.html" %}
+
 {% block content %}
-<div class="max-w-5xl mx-auto space-y-8 py-8">
+<div class="max-w-5xl mx-auto space-y-6 py-8">
 
     <!-- En-tête profil -->
     <section class="bg-gray-800 rounded-xl p-6 border border-gray-700 flex flex-col sm:flex-row items-center gap-6">
@@ -34,10 +36,10 @@
     <!-- Statistiques -->
     <section class="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {% set stat_items = [
-            ('total', 'Propositions', 'fas fa-paper-plane', 'text-blue-400'),
-            ('en_attente', 'En attente', 'fas fa-clock', 'text-yellow-400'),
-            ('acceptes', 'Acceptées', 'fas fa-check-circle', 'text-green-400'),
-            ('refuses', 'Refusées', 'fas fa-times-circle', 'text-red-400')
+            ('total',      'Propositions',  'fas fa-paper-plane',  'text-blue-400'),
+            ('en_attente', 'En attente',    'fas fa-clock',        'text-yellow-400'),
+            ('acceptes',   'Acceptées',     'fas fa-check-circle', 'text-green-400'),
+            ('refuses',    'Refusées',      'fas fa-times-circle', 'text-red-400')
         ] %}
         {% for key, label, icon, color in stat_items %}
         <div class="bg-gray-800 rounded-xl p-4 border border-gray-700 text-center">
@@ -48,85 +50,194 @@
         {% endfor %}
     </section>
 
-    <!-- Mes propositions -->
-    <section class="bg-gray-800 rounded-xl p-6 border border-gray-700">
-        <h2 class="text-xl font-bold text-white mb-5 flex items-center gap-2">
-            <i class="fas fa-list text-accent"></i> Mes propositions
-        </h2>
+    <!-- Onglets -->
+    <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
 
-        {% if propositions %}
-        <div class="space-y-4">
-            {% for prop in propositions %}
-            <div class="p-4 bg-gray-900 rounded-lg border border-gray-700 flex flex-col sm:flex-row sm:items-center gap-4">
-
-                <!-- Image -->
-                {% if prop.url_image %}
-                <img src="{{ url_for('static', filename=prop.url_image) }}"
-                     alt="{{ prop.nom_fr }}"
-                     class="w-16 h-16 rounded-lg object-cover flex-shrink-0">
-                {% else %}
-                <div class="w-16 h-16 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-star text-gray-500 text-xl"></i>
+        <!-- Mobile : dropdown -->
+        <div class="md:hidden border-b border-gray-700 bg-gray-900 p-3">
+            <div class="relative">
+                <select id="user-tab-select" onchange="switchUserTab(this.value)"
+                        class="w-full appearance-none bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-3 pr-10 text-sm font-semibold focus:outline-none focus:border-accent">
+                    <option value="propositions">📋 Mes propositions ({{ stats.total }})</option>
+                    <option value="favoris">❤️ Mes favoris ({{ favoris|length }})</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                    <i class="fas fa-chevron-down text-xs"></i>
                 </div>
-                {% endif %}
+            </div>
+        </div>
 
-                <!-- Infos -->
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <p class="font-semibold text-white">{{ prop.nom_fr }}</p>
-                        <!-- Badge statut -->
-                        {% if prop.statut == 'en_attente' %}
-                        <span class="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400">
-                            <i class="fas fa-clock mr-1"></i>En attente
-                        </span>
-                        {% elif prop.statut == 'accepte' %}
-                        <span class="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400">
-                            <i class="fas fa-check mr-1"></i>Acceptée
-                        </span>
-                        {% elif prop.statut == 'modifie' %}
-                        <span class="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400">
-                            <i class="fas fa-edit mr-1"></i>Modifiée et publiée
-                        </span>
-                        {% elif prop.statut == 'refuse' %}
-                        <span class="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">
-                            <i class="fas fa-times mr-1"></i>Refusée
-                        </span>
-                        {% endif %}
-                    </div>
-                    <p class="text-xs text-gray-500 mt-0.5">
-                        {{ prop.nom_categorie }} ·
-                        Proposé le {{ prop.date_proposition.strftime('%d/%m/%Y') }}
-                    </p>
-                    <!-- Commentaire admin -->
-                    {% if prop.commentaire_admin and prop.statut != 'en_attente' %}
-                    <div class="mt-2 p-2 bg-gray-800 rounded text-xs text-gray-300 border-l-2
-                        {% if prop.statut == 'refuse' %}border-red-400{% else %}border-green-400{% endif %}">
-                        <i class="fas fa-comment-alt mr-1 text-gray-500"></i>
-                        <strong>Admin :</strong> {{ prop.commentaire_admin }}
+        <!-- Desktop : tabs -->
+        <div class="hidden md:flex border-b border-gray-700 bg-gray-900">
+            <button onclick="switchUserTab('propositions')" id="utab-propositions"
+                    class="utab-btn active-utab flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-colors">
+                <i class="fas fa-paper-plane"></i> Mes propositions
+                <span class="bg-gray-700 text-gray-300 text-xs px-2 py-0.5 rounded-full">{{ stats.total }}</span>
+            </button>
+            <button onclick="switchUserTab('favoris')" id="utab-favoris"
+                    class="utab-btn flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-colors">
+                <i class="fas fa-heart"></i> Mes favoris
+                <span class="bg-gray-700 text-gray-300 text-xs px-2 py-0.5 rounded-full">{{ favoris|length }}</span>
+            </button>
+        </div>
+
+        <!-- ===== Panel : Propositions ===== -->
+        <div id="upanel-propositions" class="utab-panel p-6">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-list text-accent"></i> Mes propositions
+                </h2>
+                <a href="{{ url_for('user_bp.proposer_objet') }}"
+                   class="px-3 py-2 bg-accent hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition flex items-center gap-1">
+                    <i class="fas fa-plus"></i> Nouvelle proposition
+                </a>
+            </div>
+
+            {% if propositions %}
+            <div class="space-y-4">
+                {% for prop in propositions %}
+                <div class="p-4 bg-gray-900 rounded-lg border border-gray-700 flex flex-col sm:flex-row sm:items-center gap-4">
+                    {% if prop.url_image %}
+                    <img src="{{ url_for('static', filename=prop.url_image) }}"
+                         alt="{{ prop.nom_fr }}"
+                         class="w-16 h-16 rounded-lg object-cover flex-shrink-0">
+                    {% else %}
+                    <div class="w-16 h-16 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-star text-gray-500 text-xl"></i>
                     </div>
                     {% endif %}
-                </div>
 
-                <!-- Date traitement -->
-                {% if prop.date_traitement %}
-                <p class="text-xs text-gray-600 flex-shrink-0">
-                    Traité le {{ prop.date_traitement.strftime('%d/%m/%Y') }}
-                </p>
-                {% endif %}
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <p class="font-semibold text-white">{{ prop.nom_fr }}</p>
+                            {% if prop.statut == 'en_attente' %}
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400"><i class="fas fa-clock mr-1"></i>En attente</span>
+                            {% elif prop.statut == 'accepte' %}
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400"><i class="fas fa-check mr-1"></i>Acceptée</span>
+                            {% elif prop.statut == 'modifie' %}
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400"><i class="fas fa-edit mr-1"></i>Modifiée et publiée</span>
+                            {% elif prop.statut == 'refuse' %}
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400"><i class="fas fa-times mr-1"></i>Refusée</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-xs text-gray-500 mt-0.5">
+                            {{ prop.nom_categorie }} · Proposé le {{ prop.date_proposition.strftime('%d/%m/%Y') }}
+                        </p>
+                        {% if prop.commentaire_admin and prop.statut != 'en_attente' %}
+                        <div class="mt-2 p-2 bg-gray-800 rounded text-xs text-gray-300 border-l-2
+                            {% if prop.statut == 'refuse' %}border-red-400{% else %}border-green-400{% endif %}">
+                            <i class="fas fa-comment-alt mr-1 text-gray-500"></i>
+                            <strong>Admin :</strong> {{ prop.commentaire_admin }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if prop.date_traitement %}
+                    <p class="text-xs text-gray-600 flex-shrink-0">
+                        Traité le {{ prop.date_traitement.strftime('%d/%m/%Y') }}
+                    </p>
+                    {% endif %}
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="text-center py-12 text-gray-500">
-            <i class="fas fa-inbox text-4xl mb-3"></i>
-            <p>Vous n'avez pas encore fait de proposition.</p>
-            <a href="{{ url_for('user_bp.proposer_objet') }}"
-               class="mt-3 inline-block text-accent hover:underline text-sm">
-                Proposer votre premier objet →
-            </a>
-        </div>
-        {% endif %}
-    </section>
+            {% else %}
+            <div class="text-center py-12 text-gray-500">
+                <i class="fas fa-inbox text-4xl mb-3"></i>
+                <p>Vous n'avez pas encore fait de proposition.</p>
+                <a href="{{ url_for('user_bp.proposer_objet') }}"
+                   class="mt-3 inline-block text-accent hover:underline text-sm">
+                    Proposer votre premier objet →
+                </a>
+            </div>
+            {% endif %}
+        </div><!-- fin panel propositions -->
+
+        <!-- ===== Panel : Favoris ===== -->
+        <div id="upanel-favoris" class="utab-panel hidden p-6">
+            <h2 class="text-xl font-bold text-white mb-5 flex items-center gap-2">
+                <i class="fas fa-heart text-red-400"></i> Mes favoris
+            </h2>
+
+            {% if favoris %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="favoris-grid">
+                {% for obj in favoris %}
+                <div class="favori-card flex gap-3 p-4 bg-gray-900 rounded-lg border border-gray-700 hover:border-gray-600 transition">
+                    {% if obj.url_image %}
+                    <a href="{{ url_for('main_bp.object_detail', object_id=obj.id_objet) }}" class="flex-shrink-0">
+                        <img src="{% if 'http' in obj.url_image %}{{ obj.url_image }}{% else %}{{ url_for('static', filename=obj.url_image) }}{% endif %}"
+                             alt="{{ obj.nom_fr }}"
+                             class="w-16 h-16 rounded-lg object-cover hover:opacity-80 transition">
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('main_bp.object_detail', object_id=obj.id_objet) }}"
+                       class="w-16 h-16 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0 hover:bg-gray-600 transition">
+                        <i class="fas fa-star text-gray-500 text-xl"></i>
+                    </a>
+                    {% endif %}
+
+                    <div class="flex-1 min-w-0">
+                        <a href="{{ url_for('main_bp.object_detail', object_id=obj.id_objet) }}"
+                           class="font-semibold text-white text-sm truncate hover:text-accent transition block">
+                            {{ obj.nom_fr }}
+                        </a>
+                        <p class="text-xs text-accent">{{ obj.nom_categorie }}</p>
+                        <p class="text-xs text-gray-500 mt-1 line-clamp-2">{{ obj.extrait_description }}</p>
+                        <div class="flex items-center justify-between mt-2">
+                            <span class="text-xs text-gray-600">Ajouté le {{ obj.date_ajout.strftime('%d/%m/%Y') }}</span>
+                            <button onclick="toggleFavori(this, {{ obj.id_objet }})"
+                                    data-favori="true"
+                                    data-objet-id="{{ obj.id_objet }}"
+                                    class="favori-btn group flex items-center gap-1 transition text-sm"
+                                    title="Retirer des favoris">
+                                <i class="fas fa-heart text-red-400 transition-colors"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12 text-gray-500" id="favoris-empty">
+                <i class="fas fa-heart text-4xl mb-3 opacity-30"></i>
+                <p>Vous n'avez pas encore de favoris.</p>
+                <a href="{{ url_for('main_bp.catalogue') }}"
+                   class="mt-3 inline-block text-accent hover:underline text-sm">
+                    Explorer le catalogue →
+                </a>
+            </div>
+            {% endif %}
+        </div><!-- fin panel favoris -->
+
+    </div><!-- fin onglets -->
 
 </div>
+
+<style>
+.utab-btn { color: #9ca3af; border-bottom: 3px solid transparent; }
+.utab-btn:hover { color: #fff; background: rgba(255,255,255,0.04); }
+.active-utab { color: #fff; border-bottom: 3px solid #FF8811; background: rgba(255,136,17,0.08); }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+</style>
+
+<script>
+function switchUserTab(name) {
+    ['propositions','favoris'].forEach(t => {
+        document.getElementById('upanel-' + t).classList.add('hidden');
+        const btn = document.getElementById('utab-' + t);
+        if (btn) btn.classList.remove('active-utab');
+    });
+    document.getElementById('upanel-' + name).classList.remove('hidden');
+    const activeBtn = document.getElementById('utab-' + name);
+    if (activeBtn) activeBtn.classList.add('active-utab');
+    const sel = document.getElementById('user-tab-select');
+    if (sel) sel.value = name;
+    history.replaceState(null, '', '#' + name);
+}
+
+// Restaurer onglet depuis URL
+const hash = window.location.hash.replace('#', '');
+if (['propositions', 'favoris'].includes(hash)) switchUserTab(hash);
+</script>
+
+{{ favori_script() }}
 {% endblock content %}

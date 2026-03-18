@@ -1,3 +1,4 @@
+{% from 'favori_btn.html' import favori_button, favori_script %}
 {% extends "base.html" %}
 
 {% block content %}
@@ -9,26 +10,52 @@
 
     <div class="bg-gray-800 rounded-3xl shadow-2xl p-6 lg:p-10 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
+        <!-- Colonne gauche : image + titre -->
         <div class="space-y-6">
-            <h1 id="trans-title" class="text-4xl lg:text-5xl font-extrabold text-white leading-tight">
-                {{ obj.nom_fr }}
-            </h1>
+            <div>
+                <h1 id="trans-title" class="text-4xl lg:text-5xl font-extrabold text-white leading-tight">
+                    {{ obj.nom_fr }}
+                </h1>
+                {% if obj.nom_scientifique %}
+                <p class="text-gray-500 italic mt-1">{{ obj.nom_scientifique }}</p>
+                {% endif %}
+            </div>
+
             <p class="text-lg font-semibold text-accent uppercase tracking-wider">
                 <i class="fas fa-tag mr-2"></i> <span id="trans-cat">{{ obj.nom_categorie }}</span>
             </p>
 
             <div class="rounded-xl overflow-hidden shadow-xl border-4 border-gray-700">
-                <img src="{% if 'http' in obj.url_image %}{{ obj.url_image }}{% else %}{{ url_for('static', filename=obj.url_image) }}{% endif %}" 
-                    alt="{{ obj.nom_fr }}" 
-                    class="w-full h-auto object-cover">
+                <img src="{% if obj.url_image and 'http' in obj.url_image %}{{ obj.url_image }}{% elif obj.url_image %}{{ url_for('static', filename=obj.url_image) }}{% else %}https://placehold.co/600x400/1f2937/d1d5db?text={{ obj.nom_fr }}{% endif %}"
+                     alt="{{ obj.nom_fr }}"
+                     class="w-full h-auto object-cover"
+                     onerror="this.src='https://placehold.co/600x400/1f2937/d1d5db?text={{ obj.nom_fr }}'">
+            </div>
+
+            <!-- Bouton favori grand format + auteur -->
+            <div class="flex items-center justify-between">
+                {{ favori_button(obj.id_objet, est_favori, nb_favoris, size='lg') }}
+
+                {% if obj.auteur_pseudo %}
+                <div class="flex items-center gap-2 text-sm text-gray-400">
+                    {% if obj.auteur_photo %}
+                    <img src="{{ url_for('static', filename=obj.auteur_photo) }}"
+                         alt="@{{ obj.auteur_pseudo }}"
+                         class="w-6 h-6 rounded-full object-cover"
+                         onerror="this.src='{{ url_for('static', filename='uploads/profils/default_avatar.png') }}'">
+                    {% endif %}
+                    <span>Proposé par <strong class="text-accent">@{{ obj.auteur_pseudo }}</strong></span>
+                </div>
+                {% endif %}
             </div>
         </div>
 
+        <!-- Colonne droite : description + données -->
         <div class="space-y-8">
             <section class="prose max-w-none prose-invert">
                 <div class="flex justify-between items-center border-b border-gray-700 pb-2 mb-4">
                     <h2 class="text-3xl font-bold text-white mb-0">Description</h2>
-                    
+
                     <div class="flex items-center bg-gray-900 p-1 rounded-full border border-gray-700">
                         <button id="lang-en" onclick="setLanguage('en')" class="px-4 py-1 rounded-full text-xs font-bold transition-all">ENG</button>
                         <button id="lang-fr" onclick="setLanguage('fr')" class="px-4 py-1 rounded-full text-xs font-bold transition-all">FRA</button>
@@ -39,7 +66,6 @@
                     <p id="trans-desc" class="text-gray-300 text-lg leading-relaxed whitespace-pre-line">
                         {{ obj.description }}
                     </p>
-
                     <div id="loader" class="hidden absolute inset-0 bg-gray-800 bg-opacity-60 flex items-center justify-center rounded-lg">
                         <i class="fas fa-rocket fa-spin text-accent text-3xl"></i>
                     </div>
@@ -53,38 +79,55 @@
                         <dt class="text-gray-400">Type :</dt>
                         <dd id="trans-cat-tech" class="text-white font-semibold">{{ obj.nom_categorie }}</dd>
                     </div>
-                    <div class="flex justify-between items-center">
+                    <div class="flex justify-between items-center border-b border-gray-700 pb-2">
                         <dt class="text-gray-400">Publication :</dt>
                         <dd class="text-white font-semibold">{{ obj.date_publication }}</dd>
+                    </div>
+                    {% if obj.distance_al %}
+                    <div class="flex justify-between items-center border-b border-gray-700 pb-2">
+                        <dt class="text-gray-400">Distance :</dt>
+                        <dd class="text-white font-semibold">{{ obj.distance_al }} a.l.</dd>
+                    </div>
+                    {% endif %}
+                    <div class="flex justify-between items-center">
+                        <dt class="text-gray-400">Favoris :</dt>
+                        <dd class="text-white font-semibold flex items-center gap-1">
+                            <i class="fas fa-heart text-red-400 text-xs"></i>
+                            <span class="favori-count-detail">{{ nb_favoris }}</span>
+                        </dd>
                     </div>
                 </dl>
             </section>
         </div>
+
     </div>
 </div>
 
 <script>
-    // 1. On prépare les données originales
     const originalData = {
         title: {{ obj.nom_fr|tojson }},
-        cat: {{ obj.nom_categorie|tojson }},
-        desc: {{ obj.description|tojson }}
+        cat:   {{ obj.nom_categorie|tojson }},
+        desc:  {{ obj.description|tojson }}
     };
-    
+
     let cache = {};
 
     async function applyLanguage(lang) {
         const loader = document.getElementById('loader');
         const elements = {
-            title: document.getElementById('trans-title'),
-            cat: document.getElementById('trans-cat'),
+            title:   document.getElementById('trans-title'),
+            cat:     document.getElementById('trans-cat'),
             catTech: document.getElementById('trans-cat-tech'),
-            desc: document.getElementById('trans-desc')
+            desc:    document.getElementById('trans-desc')
         };
 
-        // UI des boutons
-        document.getElementById('lang-en').className = `px-4 py-1 rounded-full text-xs font-bold ${lang === 'en' ? 'bg-accent text-gray-900' : 'text-gray-500'}`;
-        document.getElementById('lang-fr').className = `px-4 py-1 rounded-full text-xs font-bold ${lang === 'fr' ? 'bg-accent text-gray-900' : 'text-gray-500'}`;
+        document.getElementById('lang-en').className = `px-4 py-1 rounded-full text-xs font-bold transition-all ${lang === 'en' ? 'bg-accent text-gray-900' : 'text-gray-500 hover:text-white'}`;
+        document.getElementById('lang-fr').className = `px-4 py-1 rounded-full text-xs font-bold transition-all ${lang === 'fr' ? 'bg-accent text-gray-900' : 'text-gray-500 hover:text-white'}`;
+
+        if (lang === 'fr') {
+            updateUI(originalData, elements);
+            return;
+        }
 
         if (cache[lang]) {
             updateUI(cache[lang], elements);
@@ -94,19 +137,16 @@
         loader.classList.remove('hidden');
 
         try {
-            // On envoie un tableau de textes à traduire pour économiser les appels
             const textsToTranslate = [originalData.title, originalData.cat, originalData.desc];
-            
             const response = await fetch('/api/translate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    text: textsToTranslate.join(' ||| '), // On délimite les textes
-                    lang: lang 
+                body: JSON.stringify({
+                    text: textsToTranslate.join(' ||| '),
+                    lang: lang
                 })
             });
             const data = await response.json();
-            
             if (data.translated_text) {
                 const parts = data.translated_text.split(' ||| ');
                 cache[lang] = { title: parts[0], cat: parts[1], desc: parts[2] };
@@ -120,10 +160,10 @@
     }
 
     function updateUI(data, el) {
-        el.title.innerText = data.title;
-        el.cat.innerText = data.cat;
+        el.title.innerText   = data.title;
+        el.cat.innerText     = data.cat;
         el.catTech.innerText = data.cat;
-        el.desc.innerText = data.desc;
+        el.desc.innerText    = data.desc;
     }
 
     function setLanguage(lang) {
@@ -135,4 +175,6 @@
         applyLanguage(localStorage.getItem('preferred_lang') || 'fr');
     });
 </script>
+
+{{ favori_script() }}
 {% endblock %}
