@@ -3,10 +3,9 @@
 {% block content %}
 <div class="max-w-6xl mx-auto space-y-12">
 
-
     <hr class="border-gray-700">
 
-        <section class="text-center py-8 bg-gray-900 rounded-xl shadow-2xl border border-gray-700">
+    <section class="text-center py-8 bg-gray-900 rounded-xl shadow-2xl border border-gray-700">
         <h1 class="text-4xl font-extrabold text-white mb-2">
             Tableau de Bord Administrateur
         </h1>
@@ -17,36 +16,33 @@
 
     <hr class="border-gray-700">
 
-        <section class="flex justify-center">
-    <div class="w-full max-w-md bg-gray-800 p-6 rounded-xl shadow-lg border-t-4 border-accent space-y-3">
-        <div class="flex items-center justify-between">
-            <p class="text-gray-400 text-sm font-medium">Catalogue AstroLearn</p>
-            <i class="fas fa-layer-group text-2xl text-accent"></i>
+    <section class="flex justify-center">
+        <div class="w-full max-w-md bg-gray-800 p-6 rounded-xl shadow-lg border-t-4 border-accent space-y-3">
+            <div class="flex items-center justify-between">
+                <p class="text-gray-400 text-sm font-medium">Catalogue AstroLearn</p>
+                <i class="fas fa-layer-group text-2xl text-accent"></i>
+            </div>
+            <p class="text-3xl font-bold text-white">
+                {{ count_objects }} <span class="text-base font-normal text-gray-500">objets au total</span>
+            </p>
         </div>
-        <p class="text-3xl font-bold text-white">
-            {{ count_objects }} <span class="text-base font-normal text-gray-500">objets au total</span>
-        </p>
-    </div>
-</section>
+    </section>
 
-<hr class="border-gray-700">
+    <hr class="border-gray-700">
 
     <section class="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700">
         <h2 class="text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-3 flex items-center">
             <i class="fas fa-database mr-3 text-indigo-400"></i> Gestion des Données Externes
         </h2>
-        
         <p class="text-gray-400 mb-4">
             Déclenchez l'importation ou la mise à jour des corps célestes du Système Solaire (Planètes, Lunes, etc.) dans votre catalogue local depuis l'API externe.
         </p>
-        
         <form method="POST" action="{{ url_for('admin_bp.ingest_data') }}">
-            <button type="submit" 
+            <button type="submit"
                     class="px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg shadow-md hover:bg-indigo-700 transition duration-200 flex items-center justify-center">
                 <i class="fas fa-sync-alt mr-2"></i> Démarrer l'Ingestion/Mise à Jour
             </button>
         </form>
-        
         <p class="text-xs text-gray-500 mt-2">
             Attention : Cette opération est limitée par la performance de l'API externe.
         </p>
@@ -54,62 +50,235 @@
 
     <hr class="border-gray-700">
 
-        <section class="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700">
+    <section class="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700">
         <h2 class="text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-3 flex items-center">
             <i class="fas fa-tasks mr-3 text-accent"></i> Actions Rapides
         </h2>
-        
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            
             <a href="{{ url_for('admin_bp.add_celestial_object') }}" class="block p-4 rounded-lg bg-gray-900 hover:bg-gray-700 transition duration-200 shadow-md border border-transparent hover:border-green-500">
-                <i class="fas fa-plus-circle text-xl text-green-500 mr-3"></i> 
+                <i class="fas fa-plus-circle text-xl text-green-500 mr-3"></i>
                 <span class="font-semibold text-white">Ajouter un Nouvel Objet</span>
                 <p class="text-xs text-gray-500 mt-1">Gérer les données du catalogue.</p>
             </a>
-            
-            <a href="https://tally.so/forms/jaZGVR/submissions" 
-                target="_blank" 
-                class="block p-4 rounded-lg bg-gray-900 hover:bg-gray-700 transition duration-200 shadow-md border border-transparent hover:border-blue-500">
-                <i class="fas fa-chart-bar text-xl text-blue-500 mr-3"></i> 
+            <a href="https://tally.so/forms/jaZGVR/submissions"
+               target="_blank"
+               class="block p-4 rounded-lg bg-gray-900 hover:bg-gray-700 transition duration-200 shadow-md border border-transparent hover:border-blue-500">
+                <i class="fas fa-chart-bar text-xl text-blue-500 mr-3"></i>
                 <span class="font-semibold text-white">Voir les Résultats du Sondage</span>
                 <p class="text-xs text-gray-500 mt-1">Ouvrir les analyses sur Tally.so</p>
             </a>
-            
             <a href="{{ url_for('admin_bp.admin_logout') }}" class="block p-4 rounded-lg bg-gray-900 hover:bg-red-900 transition duration-200 shadow-md border border-transparent hover:border-red-500">
-                <i class="fas fa-sign-out-alt text-xl text-red-500 mr-3"></i> 
+                <i class="fas fa-sign-out-alt text-xl text-red-500 mr-3"></i>
                 <span class="font-semibold text-white">Déconnexion Sécurisée</span>
                 <p class="text-xs text-gray-500 mt-1">Quitter la session administrateur.</p>
             </a>
-
         </div>
     </section>
+
     <hr class="border-gray-700">
 
+    <!-- ==================== SECTION GESTION DES ADMINS ==================== -->
+    <section id="section-admins" class="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700">
+        <h2 class="text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-3 flex items-center">
+            <i class="fas fa-user-shield mr-3 text-yellow-400"></i> Gestion des Administrateurs
+        </h2>
+
+        <!-- Liste des admins existants -->
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold text-gray-300 mb-4">Comptes existants</h3>
+            <div class="space-y-3">
+                {% for adm in admins %}
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-gray-900 rounded-lg border border-gray-700"
+                     id="admin-row-{{ adm.id_admin }}">
+
+                    <!-- Infos admin -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                            <i class="fas fa-user text-yellow-400 text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-white">{{ adm.prenom }} {{ adm.nom }}
+                                {% if adm.id_admin == session.admin_id %}
+                                <span class="ml-2 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Vous</span>
+                                {% endif %}
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                @{{ adm.pseudo }}
+                                {% if adm.email %} · {{ adm.email }}{% endif %}
+                                · ID : {{ adm.id_admin }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Actions (masquées pour le compte courant) -->
+                    {% if adm.id_admin != session.admin_id %}
+                    <div class="flex gap-2 flex-shrink-0">
+                        <!-- Bouton Modifier → ouvre le formulaire inline -->
+                        <button onclick="toggleEditForm({{ adm.id_admin }})"
+                                class="px-3 py-2 text-sm bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg transition flex items-center gap-1">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+
+                        <!-- Bouton Supprimer -->
+                        <form action="{{ url_for('admin_bp.delete_admin', admin_id=adm.id_admin) }}"
+                              method="POST"
+                              onsubmit="return confirm('Supprimer l\'administrateur {{ adm.pseudo }} ? Cette action est irréversible.');">
+                            <button type="submit"
+                                    class="px-3 py-2 text-sm bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition flex items-center gap-1">
+                                <i class="fas fa-trash"></i> Supprimer
+                            </button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-gray-600 italic">Votre compte actif — non modifiable ici</p>
+                    {% endif %}
+                </div>
+
+                <!-- Formulaire de modification inline (caché par défaut) -->
+                {% if adm.id_admin != session.admin_id %}
+                <div id="edit-form-{{ adm.id_admin }}" class="hidden mt-1 p-5 bg-gray-900/80 border border-blue-500/30 rounded-lg">
+                    <form action="{{ url_for('admin_bp.edit_admin', admin_id=adm.id_admin) }}" method="POST"
+                          class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1">Prénom <span class="text-red-400">*</span></label>
+                            <input type="text" name="prenom" value="{{ adm.prenom }}" required
+                                   class="w-full p-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1">Nom <span class="text-red-400">*</span></label>
+                            <input type="text" name="nom" value="{{ adm.nom }}" required
+                                   class="w-full p-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1">Pseudo <span class="text-red-400">*</span></label>
+                            <input type="text" name="pseudo" value="{{ adm.pseudo }}" required
+                                   class="w-full p-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1">Email <span class="text-red-400">*</span></label>
+                            <input type="email" name="email" value="{{ adm.email }}" required
+                                   class="w-full p-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-gray-400 mb-1">
+                                Nouveau mot de passe <span class="text-gray-600">(laisser vide pour ne pas changer)</span>
+                            </label>
+                            <input type="password" name="new_password" placeholder="Min. 6 caractères"
+                                   class="w-full p-2 text-sm bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div class="md:col-span-2 flex gap-3">
+                            <button type="submit"
+                                    class="px-4 py-2 text-sm bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
+                                <i class="fas fa-save mr-1"></i> Enregistrer
+                            </button>
+                            <button type="button" onclick="toggleEditForm({{ adm.id_admin }})"
+                                    class="px-4 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition">
+                                Annuler
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Formulaire de création d'un nouvel admin -->
+        <div class="border-t border-gray-700 pt-6">
+            <h3 class="text-lg font-semibold text-gray-300 mb-4 flex items-center gap-2">
+                <i class="fas fa-user-plus text-green-400"></i> Créer un nouvel administrateur
+            </h3>
+            <form action="{{ url_for('admin_bp.add_admin') }}" method="POST"
+                  class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Prénom <span class="text-red-400">*</span></label>
+                    <input type="text" name="prenom" required placeholder="ex: Jean"
+                           class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Nom <span class="text-red-400">*</span></label>
+                    <input type="text" name="nom" required placeholder="ex: Dupont"
+                           class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Pseudo <span class="text-red-400">*</span></label>
+                    <input type="text" name="pseudo" required placeholder="ex: jdupont"
+                           class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Email <span class="text-red-400">*</span></label>
+                    <input type="email" name="email" required placeholder="ex: j.dupont@astrolearn.fr"
+                           class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition">
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Mot de passe <span class="text-red-400">*</span></label>
+                    <div class="relative">
+                        <input type="password" name="password" id="new-admin-pwd" required placeholder="Min. 6 caractères"
+                               class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition pr-10">
+                        <button type="button" onclick="togglePwdVisibility('new-admin-pwd', 'pwd-eye-icon')"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition">
+                            <i class="fas fa-eye" id="pwd-eye-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Confirmer le mot de passe <span class="text-red-400">*</span></label>
+                    <div class="relative">
+                        <input type="password" name="password_confirm" id="new-admin-pwd-confirm" required placeholder="Répétez le mot de passe"
+                               class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:outline-none transition pr-10">
+                        <button type="button" onclick="togglePwdVisibility('new-admin-pwd-confirm', 'pwd-confirm-eye-icon')"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition">
+                            <i class="fas fa-eye" id="pwd-confirm-eye-icon"></i>
+                        </button>
+                    </div>
+                    <p id="pwd-match-msg" class="text-xs mt-1 hidden"></p>
+                </div>
+
+                <div class="md:col-span-2">
+                    <button type="submit"
+                            class="px-6 py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition duration-200 flex items-center gap-2">
+                        <i class="fas fa-user-plus"></i> Créer l'administrateur
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </section>
+    <!-- ==================== FIN SECTION ADMINS ==================== -->
+
+    <hr class="border-gray-700">
+
+    <!-- Liste des objets du catalogue -->
     <section class="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700">
         <h2 class="text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-3 flex items-center">
             <i class="fas fa-list mr-3 text-accent"></i> Liste des Objets au Catalogue
         </h2>
 
-<div class="mb-6 flex flex-col md:flex-row gap-4">
-    <div class="relative flex-grow">
-        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-            <i class="fas fa-search"></i>
-        </span>
-        <input type="text" id="searchInput" placeholder="Rechercher un nom ou une catégorie..." 
-               class="w-full bg-gray-900 border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:border-accent transition">
-    </div>
-
-    <select id="categoryFilter" class="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-accent transition">
-        <option value="">Toutes les catégories</option>
-        {% set categories_seen = [] %}
-        {% for obj in objects %}
-            {% if obj.nom_categorie not in categories_seen %}
-                <option value="{{ obj.nom_categorie }}">{{ obj.nom_categorie }}</option>
-                {% set _ = categories_seen.append(obj.nom_categorie) %}
-            {% endif %}
-        {% endfor %}
-    </select>
-</div>
+        <div class="mb-6 flex flex-col md:flex-row gap-4">
+            <div class="relative flex-grow">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" id="searchInput" placeholder="Rechercher un nom ou une catégorie..."
+                       class="w-full bg-gray-900 border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:border-accent transition">
+            </div>
+            <select id="categoryFilter" class="bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-accent transition">
+                <option value="">Toutes les catégories</option>
+                {% set categories_seen = [] %}
+                {% for obj in objects %}
+                    {% if obj.nom_categorie not in categories_seen %}
+                        <option value="{{ obj.nom_categorie }}">{{ obj.nom_categorie }}</option>
+                        {% set _ = categories_seen.append(obj.nom_categorie) %}
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
 
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
@@ -133,17 +302,16 @@
                         <td class="p-4 text-sm text-gray-500">{{ obj.date_publication }}</td>
                         <td class="p-4 text-right">
                             <div class="flex justify-end space-x-2">
-                                <a href="{{ url_for('admin_bp.edit_celestial_object', object_id=obj.id_objet) }}" 
+                                <a href="{{ url_for('admin_bp.edit_celestial_object', object_id=obj.id_objet) }}"
                                    class="p-2 bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg transition"
                                    title="Modifier">
                                     <i class="fas fa-edit"></i>
                                 </a>
-
-                                <form action="{{ url_for('admin_bp.delete_celestial_object', object_id=obj.id_objet) }}" 
-                                      method="POST" 
+                                <form action="{{ url_for('admin_bp.delete_celestial_object', object_id=obj.id_objet) }}"
+                                      method="POST"
                                       onsubmit="return confirm('Voulez-vous vraiment supprimer {{ obj.nom_fr }} ?');"
                                       class="inline">
-                                    <button type="submit" 
+                                    <button type="submit"
                                             class="p-2 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition"
                                             title="Supprimer">
                                         <i class="fas fa-trash"></i>
@@ -165,8 +333,10 @@
     </section>
 
 </div>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+// ---- Filtre du tableau d'objets ----
+document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('searchInput');
     const categoryFilter = document.getElementById('categoryFilter');
     const tableRows = document.querySelectorAll('tbody tr');
@@ -174,25 +344,79 @@ document.addEventListener('DOMContentLoaded', function() {
     function filterTable() {
         const searchTerm = searchInput.value.toLowerCase();
         const categoryTerm = categoryFilter.value.toLowerCase();
-
         tableRows.forEach(row => {
-            // On récupère le texte du nom (colonne 1) et de la catégorie (colonne 2)
-            const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
-            const category = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-
+            const nameCell = row.querySelector('td:nth-child(1)');
+            const catCell = row.querySelector('td:nth-child(2)');
+            if (!nameCell || !catCell) return;
+            const name = nameCell.textContent.toLowerCase();
+            const category = catCell.textContent.toLowerCase();
             const matchesSearch = name.includes(searchTerm) || category.includes(searchTerm);
             const matchesCategory = categoryTerm === "" || category.includes(categoryTerm);
-
-            if (matchesSearch && matchesCategory) {
-                row.style.display = "";
-            } else {
-                row.style.display = "none";
-            }
+            row.style.display = (matchesSearch && matchesCategory) ? "" : "none";
         });
     }
 
     searchInput.addEventListener('keyup', filterTable);
     categoryFilter.addEventListener('change', filterTable);
 });
+
+// ---- Toggle formulaire de modification admin ----
+function toggleEditForm(adminId) {
+    const form = document.getElementById('edit-form-' + adminId);
+    if (!form) return;
+    form.classList.toggle('hidden');
+    // Scroll vers le formulaire si on l'ouvre
+    if (!form.classList.contains('hidden')) {
+        form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+// ---- Afficher/masquer le mot de passe ----
+function togglePwdVisibility(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+
+// ---- Vérification temps réel correspondance mots de passe ----
+const pwdInput        = document.getElementById('new-admin-pwd');
+const pwdConfirm      = document.getElementById('new-admin-pwd-confirm');
+const pwdMatchMsg     = document.getElementById('pwd-match-msg');
+
+function checkPasswordMatch() {
+    if (!pwdConfirm.value) {
+        pwdMatchMsg.classList.add('hidden');
+        pwdConfirm.classList.remove('border-green-500', 'border-red-500');
+        return;
+    }
+    pwdMatchMsg.classList.remove('hidden');
+    if (pwdInput.value === pwdConfirm.value) {
+        pwdMatchMsg.textContent = '✓ Les mots de passe correspondent';
+        pwdMatchMsg.className = 'text-xs mt-1 text-green-400';
+        pwdConfirm.classList.remove('border-red-500');
+        pwdConfirm.classList.add('border-green-500');
+    } else {
+        pwdMatchMsg.textContent = '✗ Les mots de passe ne correspondent pas';
+        pwdMatchMsg.className = 'text-xs mt-1 text-red-400';
+        pwdConfirm.classList.remove('border-green-500');
+        pwdConfirm.classList.add('border-red-500');
+    }
+}
+
+if (pwdInput && pwdConfirm) {
+    pwdInput.addEventListener('input', checkPasswordMatch);
+    pwdConfirm.addEventListener('input', checkPasswordMatch);
+}
+
+// ---- Scroll auto vers la section admins si ancre dans l'URL ----
+if (window.location.hash === '#section-admins') {
+    document.getElementById('section-admins')?.scrollIntoView({ behavior: 'smooth' });
+}
 </script>
 {% endblock content %}

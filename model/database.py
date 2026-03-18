@@ -31,9 +31,12 @@ CREATE TABLE IF NOT EXISTS OBJET_CELESTE (
 );
 
 CREATE TABLE IF NOT EXISTS ADMINISTRATEUR (
-    id_admin SERIAL PRIMARY KEY,
-    pseudo TEXT NOT NULL UNIQUE,
-    mot_de_passe_hash TEXT NOT NULL
+    id_admin    SERIAL PRIMARY KEY,
+    pseudo      TEXT NOT NULL UNIQUE,
+    mot_de_passe_hash TEXT NOT NULL,
+    nom         TEXT,
+    prenom      TEXT,
+    email       TEXT UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS SAISIR (
@@ -55,6 +58,33 @@ CREATE TABLE IF NOT EXISTS AVIS_SONDAGE (
 );
 """
 
+# Migration : ajoute les colonnes si la table existait déjà sans elles
+MIGRATE_ADMINISTRATEUR_SQL: str = """
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'administrateur' AND column_name = 'nom'
+    ) THEN
+        ALTER TABLE ADMINISTRATEUR ADD COLUMN nom TEXT;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'administrateur' AND column_name = 'prenom'
+    ) THEN
+        ALTER TABLE ADMINISTRATEUR ADD COLUMN prenom TEXT;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'administrateur' AND column_name = 'email'
+    ) THEN
+        ALTER TABLE ADMINISTRATEUR ADD COLUMN email TEXT UNIQUE;
+    END IF;
+END$$;
+"""
+
 # ----------------------------------------------------
 # 2. Connection and Security Functions
 # ----------------------------------------------------
@@ -69,12 +99,13 @@ def get_db_connection():
         return None
 
 def create_tables() -> None:
-    """Crée toutes les tables définies dans le PDM."""
+    """Crée toutes les tables définies dans le PDM et applique les migrations."""
     conn = get_db_connection()
     if not conn: return
     try:
         with conn.cursor() as cur:
             cur.execute(CREATE_TABLES_SQL)
+            cur.execute(MIGRATE_ADMINISTRATEUR_SQL)
         conn.commit()
         print("✅ Tables de la base de données créées avec succès.")
     except Exception as e:
@@ -98,12 +129,15 @@ def insert_initial_data() -> None:
             ('Planète',), ('Planète Externe',)
         ]
         with conn.cursor() as cur:
-            cur.executemany("INSERT INTO CATEGORIE (nom_categorie) VALUES (%s) ON CONFLICT DO NOTHING", categories)
-            
+            cur.executemany(
+                "INSERT INTO CATEGORIE (nom_categorie) VALUES (%s) ON CONFLICT DO NOTHING",
+                categories
+            )
             hashed_pwd = hash_password("admin123")
             cur.execute(
-                "INSERT INTO ADMINISTRATEUR (pseudo, mot_de_passe_hash) VALUES (%s, %s) ON CONFLICT DO NOTHING", 
-                ('webmaster', hashed_pwd)
+                """INSERT INTO ADMINISTRATEUR (pseudo, mot_de_passe_hash, nom, prenom, email)
+                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING""",
+                ('webmaster', hashed_pwd, 'Admin', 'Super', 'admin@astrolearn.fr')
             )
         conn.commit()
         print("✅ Données initiales insérées avec succès.")
@@ -210,13 +244,18 @@ def get_all_categories() -> List[Dict[str, Any]]:
     finally:
         conn.close()
 
-def get_admin_by_pseudo(pseudo: str) -> Optional[Dict[str, Any]]:
-    """Récupère un administrateur par son pseudo."""
+def get_admin_by_pseudo(identifiant: str) -> Optional[Dict[str, Any]]:
+    """Récupère un administrateur par son pseudo OU son email."""
     conn = get_db_connection()
     if not conn: return None
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("SELECT id_admin, pseudo, mot_de_passe_hash FROM ADMINISTRATEUR WHERE pseudo = %s", (pseudo,))
+            cur.execute(
+                """SELECT id_admin, pseudo, mot_de_passe_hash, nom, prenom, email
+                   FROM ADMINISTRATEUR
+                   WHERE pseudo = %s OR email = %s""",
+                (identifiant, identifiant)
+            )
             return cur.fetchone()
     except Exception as e:
         print(f"Erreur lecture admin: {e}")
@@ -232,7 +271,6 @@ def get_objects_by_category(category_id: int) -> List[Dict[str, Any]]:
     """Récupère tous les objets appartenant à une catégorie spécifique."""
     conn = get_db_connection()
     if not conn: return []
-    
     query = """
     SELECT 
         o.id_objet, o.nom_fr, o.nom_scientifique, 
@@ -254,16 +292,13 @@ def get_objects_by_category(category_id: int) -> List[Dict[str, Any]]:
     finally:
         conn.close()
 
-def insert_solar_system_body(name_fr: str, name_en: str, description: str, 
-                             body_type: str, mass_value: Optional[float] = None, 
+def insert_solar_system_body(name_fr: str, name_en: str, description: str,
+                             body_type: str, mass_value: Optional[float] = None,
                              density: Optional[float] = None, image_url: Optional[str] = None) -> bool:
-    """
-    Insère un nouvel objet céleste. La traduction est gérée côté client (bouton).
-    """
+    """Insère un nouvel objet céleste."""
     conn = get_db_connection()
     if not conn: return False
-    
-    # Mapping des types NASA vers nos catégories
+
     mapping = {
         'Planet': 'Planète',
         'Moon': 'Lune',
@@ -273,10 +308,9 @@ def insert_solar_system_body(name_fr: str, name_en: str, description: str,
         'Comet': 'Astéroïde',
         'Nebula': 'Nébuleuse'
     }
-    
+
     translated_type = mapping.get(body_type, body_type)
     query_cat = "SELECT id_categorie FROM CATEGORIE WHERE nom_categorie ILIKE %s LIMIT 1"
-    
     query_insert = """
     INSERT INTO OBJET_CELESTE (nom_fr, nom_scientifique, description, url_image, date_publication, fk_id_categorie)
     VALUES (%s, %s, %s, %s, %s, %s)
@@ -284,14 +318,12 @@ def insert_solar_system_body(name_fr: str, name_en: str, description: str,
         fk_id_categorie = EXCLUDED.fk_id_categorie,
         description = EXCLUDED.description;
     """
-    
+
     try:
         with conn.cursor() as cur:
             cur.execute(query_cat, (f"%{translated_type}%",))
             row = cur.fetchone()
-            category_id = row[0] if row else 1 
-            
-            # On insère les textes tels quels (souvent en anglais de l'API)
+            category_id = row[0] if row else 1
             cur.execute(query_insert, (
                 name_fr, name_en, description, image_url, date.today(), category_id
             ))
