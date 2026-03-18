@@ -18,8 +18,18 @@ main_bp = Blueprint('main_bp', __name__)
 @main_bp.route('/', methods=['GET'])
 def index() -> str:
     """Home page with Hero Section."""
+    # On récupère toutes les données
+    all_objects = get_all_celestial_objects()
+    all_categories = get_all_categories()
+    
+    # On calcule les longueurs des listes
+    total_objects = len(all_objects) if all_objects else 0
+    total_categories = len(all_categories) if all_categories else 0
+
     return render_template(
-        'home.html',
+        'home.html', # ou 'index.html' selon ton fichier
+        total_objects=total_objects,        # Envoi du 573
+        total_categories=total_categories,  # Envoi du 8
         now=datetime.datetime.now(),
         title="Home - AstroLearn"
     )

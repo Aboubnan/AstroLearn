@@ -87,3 +87,26 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         }
     });
 });
+
+// Dans static/js/hero_animations.js
+document.addEventListener('DOMContentLoaded', () => {
+    const counters = document.querySelectorAll('.counter');
+    
+    counters.forEach(counter => {
+        const updateCount = () => {
+            // Si c'est le compteur d'objets célestes, on peut simuler le 420 
+            // ou récupérer la valeur si planets est défini
+            const target = +counter.getAttribute('data-target') || 420;
+            const count = +counter.innerText;
+            const speed = target / 100;
+
+            if (count < target) {
+                counter.innerText = Math.ceil(count + speed);
+                setTimeout(updateCount, 20);
+            } else {
+                counter.innerText = target;
+            }
+        };
+        updateCount();
+    });
+});
