@@ -77,6 +77,7 @@ function init() {
     addSun();
     addPlanets();
     setupInteractivity();
+    updateCelestialCounter();
 
     window.addEventListener('resize', onWindowResize);
     animate();
@@ -287,6 +288,33 @@ function showModal(data) {
 
 function closeModal() {
     document.getElementById('planet-modal').style.display = 'none';
+}
+
+function updateCelestialCounter() {
+    const counterElement = document.getElementById('celestial-counter');
+    if (!counterElement) return;
+
+    const target = planets.length; // Récupère le nombre réel (ex: 809)
+    const duration = 2000; // Animation de 2 secondes
+    const start = 0;
+    const startTime = performance.now();
+
+    function animateCounter(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Calcul du nombre actuel avec un effet d'accélération/décélération
+        const currentCount = Math.floor(progress * target);
+        counterElement.innerText = currentCount;
+
+        if (progress < 1) {
+            requestAnimationFrame(animateCounter);
+        } else {
+            counterElement.innerText = target;
+        }
+    }
+
+    requestAnimationFrame(animateCounter);
 }
 
 document.addEventListener("DOMContentLoaded", init);
