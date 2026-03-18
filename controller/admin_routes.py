@@ -16,6 +16,7 @@ def admin_required(view_func: Callable) -> Callable:
     """Decorator to ensure the user is an administrator."""
     @functools.wraps(view_func)
     def wrapper(*args: Any, **kwargs: Any) -> Union[Response, Any]:
+        # Sur mobile, si le cookie est mal configuré, session.get renverra None
         if not session.get('is_admin'):
             flash("Access denied. Please log in.", 'warning')
             return redirect(url_for('admin_bp.admin_login'))
@@ -32,19 +33,20 @@ def admin_login() -> Union[str, Response]:
         admin = get_admin_by_pseudo(pseudo)
         
         if admin and check_password(admin['mot_de_passe_hash'], password):
-            # On s'assure que la session n'est pas permanente
-            session.permanent = False 
+            # CORRECTION MOBILE : On rend la session permanente pour éviter 
+            # que le navigateur mobile ne la supprime trop vite.
+            session.permanent = True 
             session['is_admin'] = True
             session['admin_id'] = admin['id_admin']
             flash("Administrator connection successful.", 'success')
             return redirect(url_for('admin_bp.admin_dashboard'))
+        
         flash("Invalid username or password.", 'error')
             
     return render_template('login.html', now=datetime.datetime.now(), title="Admin Login")
 
 @admin_bp.route('/admin_logout')
 def admin_logout() -> Response:
-    # On vide TOUTE la session d'un coup
     session.clear() 
     flash("You have been logged out.", 'info')
     return redirect(url_for('main_bp.index'))
@@ -113,6 +115,7 @@ def add_celestial_object():
             """, (name, name, description, image_url, date.today(), id_cat))
             conn.commit()
             flash(f"'{name}' ajouté !", "success")
+            # Utilisation systématique de url_for pour les redirections
             return redirect(url_for('admin_bp.admin_dashboard'))
         except Exception as e:
             conn.rollback()

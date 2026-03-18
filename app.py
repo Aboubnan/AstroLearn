@@ -1,7 +1,7 @@
 # app.py - Application Entry Point
 
 import os
-from datetime import datetime
+from datetime import datetime, timedelta # Ajout de timedelta
 from typing import Dict
 from flask import Flask
 from config import SECRET_KEY, HOST, PORT, DATABASE_URL
@@ -24,7 +24,14 @@ initialize_database()
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
-app.config['SESSION_PERMANENT'] = False
+# CONFIGURATION DES SESSIONS (CRUCIAL POUR MOBILE)
+app.config.update(
+    SESSION_PERMANENT=True,
+    PERMANENT_SESSION_LIFETIME=timedelta(days=7),
+    SESSION_COOKIE_SAMESITE='Lax',    # Autorise l'envoi du cookie lors des redirections
+    SESSION_COOKIE_SECURE=True,      # Nécessaire car tu es en HTTPS (astrolearn.ddns.net)
+    SESSION_COOKIE_HTTPONLY=True     # Protection contre les scripts malveillants
+)
 
 @app.context_processor
 def inject_current_year() -> Dict[str, int]:
