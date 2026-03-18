@@ -12,7 +12,7 @@ function initializeCelestialMap() {
     const container = document.getElementById("star-map-container");
     if (!container) return;
 
-    container.innerHTML = ""; 
+    container.innerHTML = "";
 
     const config = {
         container: "star-map-container",
@@ -21,23 +21,36 @@ function initializeCelestialMap() {
         planets: { show: true, names: true },
         stars: { show: true, limit: 6 },
         dsos: { show: true },
-        form: false, // Désactive les formulaires natifs qui peuvent gêner sur mobile
+        form: false,
         type: "svg"
     };
 
     Celestial.display(config, function(error) {
         if (error) return;
-        
+
         const svg = container.querySelector("svg");
         if (svg) {
             svg.style.cursor = "pointer";
-            
-            // GESTION MOBILE : On utilise touchend pour éviter les conflits de scroll
+
+            // Variables pour détecter le scroll vs tap
+            let touchStartX = 0;
+            let touchStartY = 0;
+
+            // Gestion PC : clic classique
             svg.addEventListener("click", (e) => handleAction(e, svg));
-            
+
+            // Gestion mobile : on mémorise la position au début du touch
+            svg.addEventListener("touchstart", (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            // On déclenche l'action seulement si le doigt n'a pas scrollé (< 10px)
             svg.addEventListener("touchend", (e) => {
-                // Si l'utilisateur scrollait, on ne déclenche pas le clic
-                if (e.cancelable) {
+                const dx = Math.abs(e.changedTouches[0].clientX - touchStartX);
+                const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
+                if (dx < 10 && dy < 10) {
+                    e.preventDefault(); // Empêche le click synthétique 300ms après
                     handleAction(e, svg);
                 }
             }, { passive: false });
@@ -53,8 +66,8 @@ function handleAction(event, svg) {
 
 function handleSvgClick(event, svg) {
     const rect = svg.getBoundingClientRect();
-    
-    // Correction : Pour touchend, les coordonnées sont dans changedTouches
+
+    // Pour touchend, les coordonnées sont dans changedTouches
     let clientX, clientY;
     if (event.changedTouches && event.changedTouches.length > 0) {
         clientX = event.changedTouches[0].clientX;
@@ -83,7 +96,6 @@ function handleSvgClick(event, svg) {
         if (clicked) {
             const name = clicked.properties.name || clicked.id || "Objet inconnu";
             const type = clicked.type || "Inconnu";
-            // Remplacement de l'alert (bloquant) par un petit log ou une notification custom
             console.log(`Objet détecté : ${name}`);
             alert(`Objet : ${name}\nType : ${type}`);
         }
@@ -95,20 +107,18 @@ function handleSvgClick(event, svg) {
 function findNearestCelestialObject(raClick, decClick) {
     let nearest = null;
     let minDist = Infinity;
-    
-    // On priorise les planètes qui sont souvent plus dures à cliquer
+
     const sources = ["planets", "stars", "dsos"];
 
     // Tolérance accrue sur mobile : le doigt est moins précis qu'un curseur
     const isMobile = window.innerWidth < 768;
-    const tolerance = isMobile ? 3.0 : 0.8; 
+    const tolerance = isMobile ? 3.0 : 0.8;
 
     sources.forEach(type => {
         const list = Celestial.data ? Celestial.data[type] : null;
         if (!list || !list.features) return;
 
         list.features.forEach(obj => {
-            // Support des différents formats de coordonnées de d3-celestial
             let ra, dec;
             if (obj.properties && obj.properties.ra !== undefined) {
                 ra = obj.properties.ra;
@@ -137,7 +147,7 @@ function angularDistance(ra1, dec1, ra2, dec2) {
     const phi1 = dec1 * rad;
     const phi2 = dec2 * rad;
     const deltaLambda = (ra1 - ra2) * rad;
-    
+
     // Formule de la loi des cosinus pour la distance angulaire
     return Math.acos(
         Math.sin(phi1) * Math.sin(phi2) +

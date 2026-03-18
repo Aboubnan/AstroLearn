@@ -5,7 +5,7 @@
     position: fixed;
     bottom: 20px;
     right: 20px;
-    width: 300px; 
+    width: 300px;
     height: 300px;
     border-radius: 50%;
     background: transparent;
@@ -19,7 +19,7 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 0;
     /* Laisse passer les clics à travers le vide sur PC */
-    pointer-events: none; 
+    pointer-events: none;
 }
 
 #chatbot-open-btn:hover {
@@ -32,7 +32,7 @@
     object-fit: contain;
     border-radius: 0;
     /* L'image seule capte le clic sur PC */
-    pointer-events: auto; 
+    pointer-events: auto;
 }
 
 /* ==================== FENÊTRE DU CHATBOT ==================== */
@@ -57,6 +57,8 @@
 
 #chatbot-window.hidden {
     display: none;
+    /* CORRECTION : quand le chatbot est caché, il ne doit plus intercepter les taps */
+    pointer-events: none;
 }
 
 @keyframes chatbotOpen {
@@ -114,9 +116,9 @@
 }
 
 #chatbot-messages::-webkit-scrollbar { width: 6px; }
-#chatbot-messages::-webkit-scrollbar-thumb { 
-    background: rgba(255, 136, 17, 0.5); 
-    border-radius: 10px; 
+#chatbot-messages::-webkit-scrollbar-thumb {
+    background: rgba(255, 136, 17, 0.5);
+    border-radius: 10px;
 }
 
 /* ==================== MESSAGES ==================== */
@@ -142,7 +144,7 @@
     border: 1px solid rgba(255, 136, 17, 0.3);
 }
 
-/* ==================== SUGGESTIONS (STYLE ORIGINAL) ==================== */
+/* ==================== SUGGESTIONS ==================== */
 .suggestions-container {
     display: flex;
     flex-direction: column;
@@ -202,32 +204,34 @@
     cursor: pointer;
 }
 
-/* ==================== RESPONSIVE MOBILE (CORRECTIF CLIC PLANÈTES) ==================== */
+/* ==================== RESPONSIVE MOBILE ==================== */
 @media (max-width: 768px) {
     #chatbot-open-btn {
-        /* On réduit la boîte réelle pour ne plus couvrir les planètes */
-        width: 60px !important; 
+        /* Taille réduite pour ne plus couvrir les planètes */
+        width: 60px !important;
         height: 60px !important;
         bottom: 15px;
         right: 15px;
         background: linear-gradient(135deg, #FF8811, #FF6B35);
         border-radius: 50%;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
         pointer-events: auto !important;
+        /* CORRECTION : supprime le délai de 300ms sur les taps mobiles */
+        touch-action: manipulation;
     }
-    
+
     #chatbot-open-btn img {
-        display: none !important; /* L'astronaute encombrant disparaît */
+        display: none !important; /* L'astronaute disparaît sur mobile */
     }
-    
+
     #chatbot-open-btn::after {
-        content: "🤖"; 
+        content: "🤖";
         font-size: 30px;
         display: flex;
         align-items: center;
         justify-content: center;
     }
-    
+
     #chatbot-window {
         width: calc(100vw - 20px);
         height: calc(100vh - 120px);
