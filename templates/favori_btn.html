@@ -1,0 +1,83 @@
+{#
+    Macro réutilisable pour le bouton favori.
+    Usage dans n'importe quel template :
+        {% from 'favori_btn.html' import favori_button, favori_script %}
+        {{ favori_button(objet.id_objet, est_favori, count) }}
+        {{ favori_script() }}   ← à mettre une seule fois en bas de page
+#}
+
+{% macro favori_button(objet_id, est_favori=False, count=0, size='md') %}
+{% set is_logged = session.get('user_id') %}
+{% if is_logged %}
+<button
+    onclick="toggleFavori(this, {{ objet_id }})"
+    data-favori="{{ 'true' if est_favori else 'false' }}"
+    data-objet-id="{{ objet_id }}"
+    title="{{ 'Retirer des favoris' if est_favori else 'Ajouter aux favoris' }}"
+    class="favori-btn group flex items-center gap-1.5 transition-all
+           {% if size == 'lg' %}text-base px-3 py-2 rounded-lg bg-gray-800/80 hover:bg-gray-700{% else %}text-sm{% endif %}">
+    <i class="{% if est_favori %}fas fa-heart text-red-400{% else %}far fa-heart text-gray-400 group-hover:text-red-400{% endif %} transition-colors"></i>
+    {% if count > 0 or size == 'lg' %}
+    <span class="favori-count text-xs {% if est_favori %}text-red-400{% else %}text-gray-500{% endif %}">
+        {{ count if count > 0 else '' }}
+    </span>
+    {% endif %}
+</button>
+{% else %}
+<a href="{{ url_for('auth_bp.login') }}"
+   title="Connectez-vous pour ajouter aux favoris"
+   class="flex items-center gap-1.5 text-gray-500 hover:text-red-400 transition-colors
+          {% if size == 'lg' %}text-base px-3 py-2 rounded-lg bg-gray-800/80 hover:bg-gray-700{% else %}text-sm{% endif %}">
+    <i class="far fa-heart"></i>
+    {% if count > 0 %}<span class="text-xs">{{ count }}</span>{% endif %}
+</a>
+{% endif %}
+{% endmacro %}
+
+
+{% macro favori_script() %}
+<script>
+async function toggleFavori(btn, objetId) {
+    const wasFavori = btn.dataset.favori === 'true';
+    const icon      = btn.querySelector('i');
+    const countEl   = btn.querySelector('.favori-count');
+
+    // Feedback immédiat
+    icon.className = 'fas fa-spinner fa-spin text-gray-400';
+
+    try {
+        const resp = await fetch(`/favori/toggle/${objetId}`, { method: 'POST' });
+        const data = await resp.json();
+
+        if (!data.success) throw new Error();
+
+        // Mettre à jour l'état
+        btn.dataset.favori = data.est_favori ? 'true' : 'false';
+        btn.title = data.est_favori ? 'Retirer des favoris' : 'Ajouter aux favoris';
+
+        // Icône
+        icon.className = data.est_favori
+            ? 'fas fa-heart text-red-400 transition-colors'
+            : 'far fa-heart text-gray-400 group-hover:text-red-400 transition-colors';
+
+        // Compteur
+        if (countEl) {
+            countEl.textContent = data.count > 0 ? data.count : '';
+            countEl.className = `favori-count text-xs ${data.est_favori ? 'text-red-400' : 'text-gray-500'}`;
+        }
+
+        // Animation pulse si ajouté
+        if (data.est_favori) {
+            icon.classList.add('scale-125');
+            setTimeout(() => icon.classList.remove('scale-125'), 200);
+        }
+
+    } catch(e) {
+        // Restaurer l'état d'origine en cas d'erreur
+        icon.className = wasFavori
+            ? 'fas fa-heart text-red-400 transition-colors'
+            : 'far fa-heart text-gray-400 transition-colors';
+    }
+}
+</script>
+{% endmacro %}

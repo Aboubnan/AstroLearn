@@ -2,12 +2,13 @@ import os
 import functools
 from typing import Callable, Any, Union
 from flask import (Blueprint, render_template, request, redirect,
-                   url_for, flash, session, Response)
+                   url_for, flash, session, Response, jsonify)
 from model.database import (
     get_utilisateur_by_identifiant, get_utilisateur_by_id, check_password,
     create_utilisateur, update_utilisateur_profil, update_utilisateur_password,
     get_all_categories, create_proposition, get_propositions_by_user,
-    count_notifs_non_lues, marquer_notifs_lues
+    count_notifs_non_lues, marquer_notifs_lues,
+    toggle_favori, get_favoris_utilisateur, get_favoris_ids_utilisateur
 )
 from werkzeug.utils import secure_filename
 
@@ -91,8 +92,10 @@ def inscription():
 @user_bp.route('/mon-espace')
 @login_required
 def dashboard():
-    user = get_utilisateur_by_id(session['user_id'])
+    user         = get_utilisateur_by_id(session['user_id'])
     propositions = get_propositions_by_user(session['user_id'])
+    favoris      = get_favoris_utilisateur(session['user_id'])
+    favoris_ids  = get_favoris_ids_utilisateur(session['user_id'])
     marquer_notifs_lues(session['user_id'])
 
     stats = {
@@ -103,7 +106,8 @@ def dashboard():
     }
 
     return render_template('user_dashboard.html', user=user,
-                           propositions=propositions, stats=stats)
+                           propositions=propositions, stats=stats,
+                           favoris=favoris, favoris_ids=favoris_ids)
 
 # ----------------------------------------------------
 # PROPOSER UN OBJET
@@ -210,3 +214,26 @@ def change_password():
         flash("Erreur lors du changement de mot de passe.", "error")
 
     return redirect(url_for('user_bp.edit_profil'))
+
+# ----------------------------------------------------
+# FAVORIS
+# ----------------------------------------------------
+
+@user_bp.route('/favori/toggle/<int:objet_id>', methods=['POST'])
+@login_required
+def toggle_favori_route(objet_id):
+    """Route AJAX — toggle favori sans rechargement."""
+    result = toggle_favori(session['user_id'], objet_id)
+    if result['error']:
+        return jsonify({'success': False}), 500
+    return jsonify({
+        'success':    True,
+        'est_favori': result['est_favori'],
+        'count':      result['count']
+    })
+
+@user_bp.route('/mes-favoris')
+@login_required
+def mes_favoris():
+    favoris = get_favoris_utilisateur(session['user_id'])
+    return render_template('mes_favoris.html', favoris=favoris)

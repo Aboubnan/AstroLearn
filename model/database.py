@@ -91,6 +91,16 @@ CREATE TABLE IF NOT EXISTS AVIS_SONDAGE (
     fk_id_objet  INTEGER,
     FOREIGN KEY (fk_id_objet) REFERENCES OBJET_CELESTE(id_objet)
 );
+
+CREATE TABLE IF NOT EXISTS FAVORI (
+    id_favori        SERIAL PRIMARY KEY,
+    fk_id_utilisateur INTEGER NOT NULL,
+    fk_id_objet       INTEGER NOT NULL,
+    date_ajout        TIMESTAMP NOT NULL DEFAULT NOW(),
+    UNIQUE (fk_id_utilisateur, fk_id_objet),
+    FOREIGN KEY (fk_id_utilisateur) REFERENCES UTILISATEUR(id_utilisateur) ON DELETE CASCADE,
+    FOREIGN KEY (fk_id_objet)       REFERENCES OBJET_CELESTE(id_objet)     ON DELETE CASCADE
+);
 """
 
 # Migration pour les BDD existantes
@@ -605,5 +615,154 @@ def marquer_notifs_lues(user_id: int) -> None:
         conn.commit()
     except Exception as e:
         print(f"Erreur notifs: {e}")
+    finally:
+        conn.close()
+
+# ----------------------------------------------------
+# 7. CRUD Favoris
+# ----------------------------------------------------
+
+def toggle_favori(user_id: int, objet_id: int) -> Dict[str, Any]:
+    """Ajoute ou supprime un favori. Retourne le nouvel état."""
+    conn = get_db_connection()
+    if not conn: return {'est_favori': False, 'error': True}
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id_favori FROM FAVORI WHERE fk_id_utilisateur=%s AND fk_id_objet=%s",
+                (user_id, objet_id)
+            )
+            existing = cur.fetchone()
+            if existing:
+                cur.execute("DELETE FROM FAVORI WHERE id_favori=%s", (existing[0],))
+                est_favori = False
+            else:
+                cur.execute(
+                    "INSERT INTO FAVORI (fk_id_utilisateur, fk_id_objet) VALUES (%s, %s)",
+                    (user_id, objet_id)
+                )
+                est_favori = True
+        conn.commit()
+        # Compter le total de favoris pour cet objet
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM FAVORI WHERE fk_id_objet=%s", (objet_id,))
+            count = cur.fetchone()[0]
+        return {'est_favori': est_favori, 'count': count, 'error': False}
+    except Exception as e:
+        print(f"❌ Erreur toggle favori : {e}")
+        conn.rollback()
+        return {'est_favori': False, 'error': True}
+    finally:
+        conn.close()
+
+def get_favoris_utilisateur(user_id: int) -> List[Dict[str, Any]]:
+    """Récupère tous les favoris d'un utilisateur avec les détails des objets."""
+    conn = get_db_connection()
+    if not conn: return []
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT o.id_objet, o.nom_fr, o.nom_scientifique,
+                       LEFT(o.description, 150) AS extrait_description,
+                       o.url_image, o.date_publication, c.nom_categorie,
+                       f.date_ajout,
+                       u.pseudo AS auteur_pseudo
+                FROM FAVORI f
+                JOIN OBJET_CELESTE o ON f.fk_id_objet = o.id_objet
+                JOIN CATEGORIE c ON o.fk_id_categorie = c.id_categorie
+                LEFT JOIN UTILISATEUR u ON o.fk_id_utilisateur = u.id_utilisateur
+                WHERE f.fk_id_utilisateur = %s
+                ORDER BY f.date_ajout DESC
+            """, (user_id,))
+            return cur.fetchall()
+    except Exception as e:
+        print(f"Erreur favoris utilisateur: {e}")
+        return []
+    finally:
+        conn.close()
+
+def get_favoris_ids_utilisateur(user_id: int) -> List[int]:
+    """Retourne la liste des id_objet mis en favori par un utilisateur."""
+    conn = get_db_connection()
+    if not conn: return []
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT fk_id_objet FROM FAVORI WHERE fk_id_utilisateur=%s",
+                (user_id,)
+            )
+            return [r[0] for r in cur.fetchall()]
+    except Exception as e:
+        print(f"Erreur ids favoris: {e}")
+        return []
+    finally:
+        conn.close()
+
+def count_favoris_objet(objet_id: int) -> int:
+    """Nombre total de fois qu'un objet a été mis en favori."""
+    conn = get_db_connection()
+    if not conn: return 0
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM FAVORI WHERE fk_id_objet=%s", (objet_id,))
+            return cur.fetchone()[0]
+    except:
+        return 0
+    finally:
+        conn.close()
+
+def get_favoris_counts_batch(objet_ids: List[int]) -> Dict[int, int]:
+    """Récupère les compteurs de favoris pour une liste d'objets en UNE seule requête."""
+    if not objet_ids:
+        return {}
+    conn = get_db_connection()
+    if not conn: return {}
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """SELECT fk_id_objet, COUNT(*) as nb
+                   FROM FAVORI
+                   WHERE fk_id_objet = ANY(%s)
+                   GROUP BY fk_id_objet""",
+                (objet_ids,)
+            )
+            return {row[0]: row[1] for row in cur.fetchall()}
+    except Exception as e:
+        print(f"Erreur batch favoris: {e}")
+        return {}
+    finally:
+        conn.close()
+
+def est_favori(user_id: int, objet_id: int) -> bool:
+    """Vérifie si un objet est en favori pour un utilisateur."""
+    conn = get_db_connection()
+    if not conn: return False
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT 1 FROM FAVORI WHERE fk_id_utilisateur=%s AND fk_id_objet=%s",
+                (user_id, objet_id)
+            )
+            return cur.fetchone() is not None
+    except:
+        return False
+    finally:
+        conn.close()
+
+def get_favoris_counts() -> Dict[int, int]:
+    """Retourne un dict {id_objet: nb_favoris} en une seule requête."""
+    conn = get_db_connection()
+    if not conn: return {}
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT fk_id_objet, COUNT(*) 
+                FROM FAVORI 
+                GROUP BY fk_id_objet
+            """)
+            return {row[0]: row[1] for row in cur.fetchall()}
+    except Exception as e:
+        print(f"Erreur favoris counts: {e}")
+        return {}
     finally:
         conn.close()

@@ -37,7 +37,25 @@
     <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
 
         <!-- Barre d'onglets -->
-        <div class="flex overflow-x-auto border-b border-gray-700 bg-gray-900">
+        <!-- MOBILE : Dropdown select -->
+        <div class="md:hidden border-b border-gray-700 bg-gray-900 p-3">
+            <div class="relative">
+                <select id="tab-select" onchange="switchTab(this.value)"
+                        class="w-full appearance-none bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-3 pr-10 text-sm font-semibold focus:outline-none focus:border-accent">
+                    <option value="actions">⚡ Actions Rapides</option>
+                    <option value="propositions">📥 Propositions {% if nb_en_attente > 0 %}({{ nb_en_attente }}){% endif %}</option>
+                    <option value="utilisateurs">👥 Utilisateurs</option>
+                    <option value="admins">🛡 Administrateurs</option>
+                    <option value="catalogue">📋 Catalogue</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- DESKTOP : Barre d'onglets -->
+        <div class="hidden md:flex border-b border-gray-700 bg-gray-900">
             <button onclick="switchTab('actions')" id="tab-actions"
                     class="tab-btn active-tab flex items-center gap-2 px-5 py-4 text-sm font-semibold whitespace-nowrap transition-colors">
                 <i class="fas fa-tasks"></i> Actions Rapides
@@ -442,6 +460,27 @@
                     <i class="fas fa-plus"></i> Ajouter
                 </a>
             </div>
+            <!-- Bouton ingestion NASA + barre de chargement -->
+            <div class="mb-4 flex items-center gap-3 flex-wrap">
+                <form method="POST" action="{{ url_for('admin_bp.ingest_data') }}" onsubmit="startIngestion(this)" class="inline">
+                    <button type="submit" id="ingest-btn"
+                            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition flex items-center gap-2 whitespace-nowrap">
+                        <i class="fas fa-sync-alt" id="ingest-icon"></i>
+                        <span id="ingest-label">Ingérer API NASA</span>
+                    </button>
+                </form>
+                <p class="text-xs text-gray-500">Importe les corps célestes depuis l'API externe.</p>
+            </div>
+            <div id="ingest-loading" class="hidden mb-4 p-4 bg-indigo-900/30 border border-indigo-500/40 rounded-lg">
+                <div class="flex items-center gap-3 mb-2">
+                    <i class="fas fa-satellite-dish text-indigo-400 text-xl"></i>
+                    <p class="text-indigo-300 font-semibold text-sm">Synchronisation avec l'API NASA en cours...</p>
+                </div>
+                <p class="text-xs text-gray-400 mb-3">Cette opération peut prendre quelques secondes.</p>
+                <div class="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
+                    <div id="ingest-bar" class="h-2 bg-indigo-500 rounded-full" style="width:0%" ></div>
+                </div>
+            </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
@@ -506,11 +545,18 @@ const TABS = ['actions', 'propositions', 'utilisateurs', 'admins', 'catalogue'];
 function switchTab(name) {
     TABS.forEach(t => {
         document.getElementById('panel-' + t).classList.add('hidden');
-        document.getElementById('tab-' + t).classList.remove('active-tab');
+        // Boutons desktop
+        const btn = document.getElementById('tab-' + t);
+        if (btn) btn.classList.remove('active-tab');
     });
     document.getElementById('panel-' + name).classList.remove('hidden');
-    document.getElementById('tab-' + name).classList.add('active-tab');
-    // Mémorise l'onglet actif dans l'URL sans recharger
+    // Activer le bouton desktop
+    const activeBtn = document.getElementById('tab-' + name);
+    if (activeBtn) activeBtn.classList.add('active-tab');
+    // Synchroniser le select mobile
+    const sel = document.getElementById('tab-select');
+    if (sel) sel.value = name;
+    // Mémoriser dans l'URL
     history.replaceState(null, '', '#' + name);
 }
 
@@ -556,6 +602,30 @@ function togglePwdVisibility(inputId, iconId) {
     icon.classList.toggle('fa-eye-slash');
 }
 
+
+function startIngestion(form) {
+    const btn   = document.getElementById("ingest-btn");
+    const icon  = document.getElementById("ingest-icon");
+    const label = document.getElementById("ingest-label");
+    const box   = document.getElementById("ingest-loading");
+    const bar   = document.getElementById("ingest-bar");
+    // Désactiver le bouton
+    btn.disabled = true;
+    btn.classList.add("opacity-60", "cursor-not-allowed");
+    icon.classList.add("fa-spin");
+    label.textContent = "Ingestion en cours...";
+    // Afficher la barre
+    box.classList.remove("hidden");
+    // Animation progressive de la barre (simulée)
+    let pct = 0;
+    const interval = setInterval(() => {
+        pct = Math.min(pct + Math.random() * 8, 90);
+        bar.style.width = pct + "%";
+        bar.style.transition = "width 0.4s ease";
+    }, 600);
+    // Stocker lintervalle pour pouvoir larrêter
+    form.dataset.interval = interval;
+}
 function checkAdminPwd() {
     const p1 = document.getElementById('new-admin-pwd').value;
     const p2 = document.getElementById('new-admin-pwd2').value;
