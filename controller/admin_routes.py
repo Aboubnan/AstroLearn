@@ -1,6 +1,7 @@
 import os
 import datetime
 import functools
+import bcrypt as _bcrypt
 from typing import Callable, Any, Union
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, Response, jsonify
 from model.database import get_admin_by_pseudo, check_password, get_db_connection
@@ -16,9 +17,8 @@ def admin_required(view_func: Callable) -> Callable:
     """Decorator to ensure the user is an administrator."""
     @functools.wraps(view_func)
     def wrapper(*args: Any, **kwargs: Any) -> Union[Response, Any]:
-        # Sur mobile, si le cookie est mal configuré, session.get renverra None
         if not session.get('is_admin'):
-            flash("Access denied. Please log in.", 'warning')
+            flash("Accès refusé. Veuillez vous connecter.", 'warning')
             return redirect(url_for('admin_bp.admin_login'))
         return view_func(*args, **kwargs)
     return wrapper
@@ -31,24 +31,22 @@ def admin_login() -> Union[str, Response]:
         pseudo = request.form.get('pseudo', '')
         password = request.form.get('password', '')
         admin = get_admin_by_pseudo(pseudo)
-        
+
         if admin and check_password(admin['mot_de_passe_hash'], password):
-            # CORRECTION MOBILE : On rend la session permanente pour éviter 
-            # que le navigateur mobile ne la supprime trop vite.
-            session.permanent = True 
+            session.permanent = True
             session['is_admin'] = True
             session['admin_id'] = admin['id_admin']
-            flash("Administrator connection successful.", 'success')
+            flash("Connexion administrateur réussie.", 'success')
             return redirect(url_for('admin_bp.admin_dashboard'))
-        
-        flash("Invalid username or password.", 'error')
-            
+
+        flash("Pseudo ou mot de passe invalide.", 'error')
+
     return render_template('login.html', now=datetime.datetime.now(), title="Admin Login")
 
 @admin_bp.route('/admin_logout')
 def admin_logout() -> Response:
-    session.clear() 
-    flash("You have been logged out.", 'info')
+    session.clear()
+    flash("Vous avez été déconnecté.", 'info')
     return redirect(url_for('main_bp.index'))
 
 # --- DASHBOARD ---
@@ -58,7 +56,7 @@ def admin_logout() -> Response:
 def admin_dashboard():
     conn = get_db_connection()
     cur = conn.cursor()
-    
+
     cur.execute("SELECT COUNT(*) FROM objet_celeste")
     count_objects = cur.fetchone()[0]
 
@@ -78,15 +76,30 @@ def admin_dashboard():
     rows = cur.fetchall()
     objects = [{'id_objet': r[0], 'nom_fr': r[1], 'date_publication': r[2], 'nom_categorie': r[3]} for r in rows]
 
+    # Récupération de la liste des admins avec les nouvelles colonnes
+    cur.execute("SELECT id_admin, pseudo, nom, prenom, email FROM ADMINISTRATEUR ORDER BY id_admin ASC")
+    admin_rows = cur.fetchall()
+    admins = [
+        {
+            'id_admin': r[0],
+            'pseudo':   r[1],
+            'nom':      r[2] or '',
+            'prenom':   r[3] or '',
+            'email':    r[4] or ''
+        }
+        for r in admin_rows
+    ]
+
     cur.close()
     conn.close()
-    
-    return render_template('admin_dashboard.html', 
-                           objects=objects, 
-                           count_objects=count_objects, 
-                           count_ia=count_ia)
 
-# --- CRUD OPERATIONS ---
+    return render_template('admin_dashboard.html',
+                           objects=objects,
+                           count_objects=count_objects,
+                           count_ia=count_ia,
+                           admins=admins)
+
+# --- CRUD OBJETS CÉLESTES ---
 
 @admin_bp.route('/admin/add-object', methods=['GET', 'POST'])
 @admin_required
@@ -104,7 +117,8 @@ def add_celestial_object():
         if file and file.filename != '':
             filename = secure_filename(file.filename)
             upload_path = os.path.join('static', 'uploads', 'objects')
-            if not os.path.exists(upload_path): os.makedirs(upload_path)
+            if not os.path.exists(upload_path):
+                os.makedirs(upload_path)
             file.save(os.path.join(upload_path, filename))
             image_url = f"uploads/objects/{filename}"
 
@@ -114,8 +128,7 @@ def add_celestial_object():
                 VALUES (%s, %s, %s, %s, %s, %s)
             """, (name, name, description, image_url, date.today(), id_cat))
             conn.commit()
-            flash(f"'{name}' ajouté !", "success")
-            # Utilisation systématique de url_for pour les redirections
+            flash(f"'{name}' ajouté avec succès !", "success")
             return redirect(url_for('admin_bp.admin_dashboard'))
         except Exception as e:
             conn.rollback()
@@ -153,10 +166,8 @@ def edit_celestial_object(object_id):
 
     cur.execute("SELECT * FROM objet_celeste WHERE id_objet = %s", (object_id,))
     obj = cur.fetchone()
-    
     cur.execute("SELECT id_categorie, nom_categorie FROM categorie ORDER BY nom_categorie")
     categories = cur.fetchall()
-    
     cur.close()
     conn.close()
     return render_template('edit_object.html', obj=obj, categories=categories)
@@ -177,6 +188,153 @@ def delete_celestial_object(object_id):
         conn.close()
     return redirect(url_for('admin_bp.admin_dashboard'))
 
+# --- CRUD ADMINISTRATEURS ---
+
+@admin_bp.route('/admin/add-admin', methods=['POST'])
+@admin_required
+def add_admin():
+    pseudo   = request.form.get('pseudo',   '').strip()
+    password = request.form.get('password', '').strip()
+    nom      = request.form.get('nom',      '').strip()
+    prenom   = request.form.get('prenom',   '').strip()
+    email    = request.form.get('email',    '').strip()
+
+    # Validations
+    if not pseudo or not password:
+        flash("Le pseudo et le mot de passe sont obligatoires.", "error")
+        return redirect(url_for('admin_bp.admin_dashboard') + '#section-admins')
+    if not nom or not prenom:
+        flash("Le nom et le prénom sont obligatoires.", "error")
+        return redirect(url_for('admin_bp.admin_dashboard') + '#section-admins')
+    if not email:
+        flash("L'email est obligatoire.", "error")
+        return redirect(url_for('admin_bp.admin_dashboard') + '#section-admins')
+    password_confirm = request.form.get('password_confirm', '').strip()
+
+    if len(password) < 6:
+        flash("Le mot de passe doit contenir au moins 6 caractères.", "error")
+        return redirect(url_for('admin_bp.admin_dashboard') + '#section-admins')
+
+    if password != password_confirm:
+        flash("Les deux mots de passe ne correspondent pas.", "error")
+        return redirect(url_for('admin_bp.admin_dashboard') + '#section-admins')
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    # Unicité pseudo
+    cur.execute("SELECT id_admin FROM ADMINISTRATEUR WHERE pseudo = %s", (pseudo,))
+    if cur.fetchone():
+        flash(f"Le pseudo '{pseudo}' est déjà utilisé.", "error")
+        cur.close(); conn.close()
+        return redirect(url_for('admin_bp.admin_dashboard') + '#section-admins')
+
+    # Unicité email
+    cur.execute("SELECT id_admin FROM ADMINISTRATEUR WHERE email = %s", (email,))
+    if cur.fetchone():
+        flash(f"L'adresse email '{email}' est déjà associée à un compte.", "error")
+        cur.close(); conn.close()
+        return redirect(url_for('admin_bp.admin_dashboard') + '#section-admins')
+
+    try:
+        password_hash = _bcrypt.hashpw(password.encode('utf-8'), _bcrypt.gensalt()).decode('utf-8')
+        cur.execute(
+            """INSERT INTO ADMINISTRATEUR (pseudo, mot_de_passe_hash, nom, prenom, email)
+               VALUES (%s, %s, %s, %s, %s)""",
+            (pseudo, password_hash, nom, prenom, email)
+        )
+        conn.commit()
+        flash(f"Administrateur '{prenom} {nom}' créé avec succès !", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Erreur lors de la création : {e}", "error")
+    finally:
+        cur.close()
+        conn.close()
+
+    return redirect(url_for('admin_bp.admin_dashboard') + '#section-admins')
+
+
+@admin_bp.route('/admin/edit-admin/<int:admin_id>', methods=['POST'])
+@admin_required
+def edit_admin(admin_id):
+    if admin_id == session.get('admin_id'):
+        flash("Vous ne pouvez pas modifier votre propre compte depuis ici.", "warning")
+        return redirect(url_for('admin_bp.admin_dashboard') + '#section-admins')
+
+    pseudo       = request.form.get('pseudo',       '').strip()
+    nom          = request.form.get('nom',          '').strip()
+    prenom       = request.form.get('prenom',       '').strip()
+    email        = request.form.get('email',        '').strip()
+    new_password = request.form.get('new_password', '').strip()
+
+    if not pseudo or not nom or not prenom or not email:
+        flash("Tous les champs (pseudo, nom, prénom, email) sont obligatoires.", "error")
+        return redirect(url_for('admin_bp.admin_dashboard') + '#section-admins')
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        if new_password:
+            if len(new_password) < 6:
+                flash("Le nouveau mot de passe doit contenir au moins 6 caractères.", "error")
+                return redirect(url_for('admin_bp.admin_dashboard') + '#section-admins')
+            password_hash = _bcrypt.hashpw(new_password.encode('utf-8'), _bcrypt.gensalt()).decode('utf-8')
+            cur.execute(
+                """UPDATE ADMINISTRATEUR
+                   SET pseudo = %s, mot_de_passe_hash = %s, nom = %s, prenom = %s, email = %s
+                   WHERE id_admin = %s""",
+                (pseudo, password_hash, nom, prenom, email, admin_id)
+            )
+        else:
+            cur.execute(
+                """UPDATE ADMINISTRATEUR
+                   SET pseudo = %s, nom = %s, prenom = %s, email = %s
+                   WHERE id_admin = %s""",
+                (pseudo, nom, prenom, email, admin_id)
+            )
+        conn.commit()
+        flash(f"Administrateur '{prenom} {nom}' mis à jour.", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Erreur lors de la modification : {e}", "error")
+    finally:
+        cur.close()
+        conn.close()
+
+    return redirect(url_for('admin_bp.admin_dashboard') + '#section-admins')
+
+
+@admin_bp.route('/admin/delete-admin/<int:admin_id>', methods=['POST'])
+@admin_required
+def delete_admin(admin_id):
+    if admin_id == session.get('admin_id'):
+        flash("Vous ne pouvez pas supprimer votre propre compte.", "error")
+        return redirect(url_for('admin_bp.admin_dashboard') + '#section-admins')
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT COUNT(*) FROM ADMINISTRATEUR")
+    if cur.fetchone()[0] <= 1:
+        flash("Impossible de supprimer le dernier administrateur.", "error")
+        cur.close(); conn.close()
+        return redirect(url_for('admin_bp.admin_dashboard') + '#section-admins')
+
+    try:
+        cur.execute("DELETE FROM ADMINISTRATEUR WHERE id_admin = %s", (admin_id,))
+        conn.commit()
+        flash("Administrateur supprimé.", "success")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Erreur : {e}", "error")
+    finally:
+        cur.close()
+        conn.close()
+
+    return redirect(url_for('admin_bp.admin_dashboard') + '#section-admins')
+
 # --- API & TOOLS ---
 
 @admin_bp.route('/admin/ingest_solar_system', methods=['POST'])
@@ -194,10 +352,10 @@ def translate_text():
     data = request.json
     text = data.get('text', '')
     target_lang = data.get('lang', 'fr')
-    
+
     if not text or len(text) < 3:
         return jsonify({'translated_text': text})
-        
+
     try:
         source_lang = 'en' if target_lang == 'fr' else 'fr'
         translated = GoogleTranslator(source=source_lang, target=target_lang).translate(text)
