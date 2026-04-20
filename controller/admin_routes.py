@@ -473,10 +473,8 @@ def translate_text():
     if not text or len(text) < 3:
         return jsonify({"translated_text": text})
     try:
-        source_lang = "en" if target_lang == "fr" else "fr"
-        translated = GoogleTranslator(source=source_lang, target=target_lang).translate(
-            text
-        )
+        source_lang = "auto"
+        translated = GoogleTranslator(source=source_lang, target=target_lang).translate(text)
         return jsonify({"translated_text": translated})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
