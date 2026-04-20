@@ -2,7 +2,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import bcrypt
 from typing import List, Dict, Any, Optional
-from datetime import datetime, date
+from datetime import date
 from config import DATABASE_URL
 
 # ----------------------------------------------------
@@ -127,6 +127,7 @@ END$$;
 # 2. Connexion & Sécurité
 # ----------------------------------------------------
 
+
 def get_db_connection():
     try:
         return psycopg2.connect(DATABASE_URL)
@@ -134,9 +135,11 @@ def get_db_connection():
         print(f"❌ Impossible de se connecter à PostgreSQL: {e}")
         return None
 
+
 def create_tables() -> None:
     conn = get_db_connection()
-    if not conn: return
+    if not conn:
+        return
     try:
         with conn.cursor() as cur:
             cur.execute(CREATE_TABLES_SQL)
@@ -149,30 +152,47 @@ def create_tables() -> None:
     finally:
         conn.close()
 
+
 def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
 
 def check_password(hashed_password: str, user_password: str) -> bool:
-    return bcrypt.checkpw(user_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    return bcrypt.checkpw(
+        user_password.encode("utf-8"), hashed_password.encode("utf-8")
+    )
+
 
 def insert_initial_data() -> None:
     conn = get_db_connection()
-    if not conn: return
+    if not conn:
+        return
     try:
         categories = [
-            ('Amas Globulaire',), ('Astéroïde',), ('Étoile',),
-            ('Galaxie',), ('Lune',), ('Nébuleuse',),
-            ('Planète',), ('Planète Externe',)
+            ("Amas Globulaire",),
+            ("Astéroïde",),
+            ("Étoile",),
+            ("Galaxie",),
+            ("Lune",),
+            ("Nébuleuse",),
+            ("Planète",),
+            ("Planète Externe",),
         ]
         with conn.cursor() as cur:
             cur.executemany(
                 "INSERT INTO CATEGORIE (nom_categorie) VALUES (%s) ON CONFLICT DO NOTHING",
-                categories
+                categories,
             )
             cur.execute(
                 """INSERT INTO ADMINISTRATEUR (pseudo, mot_de_passe_hash, nom, prenom, email)
                    VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING""",
-                ('webmaster', hash_password("admin123"), 'Admin', 'Super', 'admin@astrolearn.fr')
+                (
+                    "webmaster",
+                    hash_password("admin123"),
+                    "Admin",
+                    "Super",
+                    "admin@astrolearn.fr",
+                ),
             )
         conn.commit()
         print("✅ Données initiales insérées.")
@@ -182,18 +202,22 @@ def insert_initial_data() -> None:
     finally:
         conn.close()
 
+
 def initialize_database() -> None:
     print("🚀 Initialisation de la base de données...")
     create_tables()
     insert_initial_data()
 
+
 # ----------------------------------------------------
 # 3. CRUD Objets Célestes
 # ----------------------------------------------------
 
+
 def get_all_celestial_objects() -> List[Dict[str, Any]]:
     conn = get_db_connection()
-    if not conn: return []
+    if not conn:
+        return []
     query = """
     SELECT o.id_objet, o.nom_fr, o.nom_scientifique,
            LEFT(o.description, 150) AS extrait_description,
@@ -214,9 +238,11 @@ def get_all_celestial_objects() -> List[Dict[str, Any]]:
     finally:
         conn.close()
 
+
 def get_object_by_id(object_id: int) -> Optional[Dict[str, Any]]:
     conn = get_db_connection()
-    if not conn: return None
+    if not conn:
+        return None
     query = """
     SELECT o.id_objet, o.nom_fr, o.nom_scientifique, o.description, o.distance_al,
            o.url_image, o.date_publication, c.nom_categorie,
@@ -236,10 +262,12 @@ def get_object_by_id(object_id: int) -> Optional[Dict[str, Any]]:
     finally:
         conn.close()
 
+
 def search_celestial_objects(search_term: str) -> List[Dict[str, Any]]:
     conn = get_db_connection()
-    if not conn: return []
-    p = f'%{search_term.lower()}%'
+    if not conn:
+        return []
+    p = f"%{search_term.lower()}%"
     query = """
     SELECT o.id_objet, o.nom_fr, o.nom_scientifique,
            LEFT(o.description, 150) AS extrait_description,
@@ -262,12 +290,16 @@ def search_celestial_objects(search_term: str) -> List[Dict[str, Any]]:
     finally:
         conn.close()
 
+
 def get_all_categories() -> List[Dict[str, Any]]:
     conn = get_db_connection()
-    if not conn: return []
+    if not conn:
+        return []
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("SELECT id_categorie, nom_categorie FROM CATEGORIE ORDER BY nom_categorie")
+            cur.execute(
+                "SELECT id_categorie, nom_categorie FROM CATEGORIE ORDER BY nom_categorie"
+            )
             return cur.fetchall()
     except Exception as e:
         print(f"Erreur catégories: {e}")
@@ -275,9 +307,11 @@ def get_all_categories() -> List[Dict[str, Any]]:
     finally:
         conn.close()
 
+
 def get_objects_by_category(category_id: int) -> List[Dict[str, Any]]:
     conn = get_db_connection()
-    if not conn: return []
+    if not conn:
+        return []
     query = """
     SELECT o.id_objet, o.nom_fr, o.nom_scientifique,
            LEFT(o.description, 150) AS extrait_description,
@@ -298,30 +332,48 @@ def get_objects_by_category(category_id: int) -> List[Dict[str, Any]]:
     finally:
         conn.close()
 
-def insert_solar_system_body(name_fr, name_en, description, body_type,
-                              mass_value=None, density=None, image_url=None) -> bool:
+
+def insert_solar_system_body(
+    name_fr,
+    name_en,
+    description,
+    body_type,
+    mass_value=None,
+    density=None,
+    image_url=None,
+) -> bool:
     conn = get_db_connection()
-    if not conn: return False
+    if not conn:
+        return False
     mapping = {
-        'Planet': 'Planète', 'Moon': 'Lune', 'Star': 'Étoile',
-        'Asteroid': 'Astéroïde', 'Dwarf Planet': 'Planète Externe',
-        'Comet': 'Astéroïde', 'Nebula': 'Nébuleuse'
+        "Planet": "Planète",
+        "Moon": "Lune",
+        "Star": "Étoile",
+        "Asteroid": "Astéroïde",
+        "Dwarf Planet": "Planète Externe",
+        "Comet": "Astéroïde",
+        "Nebula": "Nébuleuse",
     }
     translated_type = mapping.get(body_type, body_type)
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT id_categorie FROM CATEGORIE WHERE nom_categorie ILIKE %s LIMIT 1",
-                        (f"%{translated_type}%",))
+            cur.execute(
+                "SELECT id_categorie FROM CATEGORIE WHERE nom_categorie ILIKE %s LIMIT 1",
+                (f"%{translated_type}%",),
+            )
             row = cur.fetchone()
             category_id = row[0] if row else 1
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO OBJET_CELESTE (nom_fr, nom_scientifique, description, url_image,
                     date_publication, fk_id_categorie)
                 VALUES (%s, %s, %s, %s, %s, %s)
                 ON CONFLICT (nom_fr) DO UPDATE SET
                     fk_id_categorie = EXCLUDED.fk_id_categorie,
                     description = EXCLUDED.description;
-            """, (name_fr, name_en, description, image_url, date.today(), category_id))
+            """,
+                (name_fr, name_en, description, image_url, date.today(), category_id),
+            )
         conn.commit()
         return True
     except Exception as e:
@@ -331,20 +383,23 @@ def insert_solar_system_body(name_fr, name_en, description, body_type,
     finally:
         conn.close()
 
+
 # ----------------------------------------------------
 # 4. CRUD Administrateurs
 # ----------------------------------------------------
 
+
 def get_admin_by_pseudo(identifiant: str) -> Optional[Dict[str, Any]]:
     """Récupère un admin par pseudo OU email."""
     conn = get_db_connection()
-    if not conn: return None
+    if not conn:
+        return None
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 """SELECT id_admin, pseudo, mot_de_passe_hash, nom, prenom, email
                    FROM ADMINISTRATEUR WHERE pseudo = %s OR email = %s""",
-                (identifiant, identifiant)
+                (identifiant, identifiant),
             )
             return cur.fetchone()
     except Exception as e:
@@ -353,20 +408,38 @@ def get_admin_by_pseudo(identifiant: str) -> Optional[Dict[str, Any]]:
     finally:
         conn.close()
 
+
 # ----------------------------------------------------
 # 5. CRUD Utilisateurs
 # ----------------------------------------------------
 
-def create_utilisateur(pseudo: str, nom: str, prenom: str, email: str,
-                        password: str, genre: str, photo_profil: str) -> bool:
+
+def create_utilisateur(
+    pseudo: str,
+    nom: str,
+    prenom: str,
+    email: str,
+    password: str,
+    genre: str,
+    photo_profil: str,
+) -> bool:
     conn = get_db_connection()
-    if not conn: return False
+    if not conn:
+        return False
     try:
         with conn.cursor() as cur:
             cur.execute(
                 """INSERT INTO UTILISATEUR (pseudo, nom, prenom, email, mot_de_passe_hash, genre, photo_profil)
                    VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-                (pseudo, nom, prenom, email, hash_password(password), genre, photo_profil)
+                (
+                    pseudo,
+                    nom,
+                    prenom,
+                    email,
+                    hash_password(password),
+                    genre,
+                    photo_profil,
+                ),
             )
         conn.commit()
         return True
@@ -377,16 +450,18 @@ def create_utilisateur(pseudo: str, nom: str, prenom: str, email: str,
     finally:
         conn.close()
 
+
 def get_utilisateur_by_id(user_id: int) -> Optional[Dict[str, Any]]:
     conn = get_db_connection()
-    if not conn: return None
+    if not conn:
+        return None
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 """SELECT id_utilisateur, pseudo, nom, prenom, email, genre,
                           photo_profil, date_inscription, est_actif
                    FROM UTILISATEUR WHERE id_utilisateur = %s""",
-                (user_id,)
+                (user_id,),
             )
             return cur.fetchone()
     except Exception as e:
@@ -395,17 +470,19 @@ def get_utilisateur_by_id(user_id: int) -> Optional[Dict[str, Any]]:
     finally:
         conn.close()
 
+
 def get_utilisateur_by_identifiant(identifiant: str) -> Optional[Dict[str, Any]]:
     """Récupère un utilisateur par pseudo OU email."""
     conn = get_db_connection()
-    if not conn: return None
+    if not conn:
+        return None
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 """SELECT id_utilisateur, pseudo, nom, prenom, email,
                           mot_de_passe_hash, genre, photo_profil, est_actif
                    FROM UTILISATEUR WHERE pseudo = %s OR email = %s""",
-                (identifiant, identifiant)
+                (identifiant, identifiant),
             )
             return cur.fetchone()
     except Exception as e:
@@ -414,22 +491,30 @@ def get_utilisateur_by_identifiant(identifiant: str) -> Optional[Dict[str, Any]]
     finally:
         conn.close()
 
-def update_utilisateur_profil(user_id: int, nom: str, prenom: str, email: str,
-                               genre: str, photo_profil: Optional[str] = None) -> bool:
+
+def update_utilisateur_profil(
+    user_id: int,
+    nom: str,
+    prenom: str,
+    email: str,
+    genre: str,
+    photo_profil: Optional[str] = None,
+) -> bool:
     conn = get_db_connection()
-    if not conn: return False
+    if not conn:
+        return False
     try:
         with conn.cursor() as cur:
             if photo_profil:
                 cur.execute(
                     """UPDATE UTILISATEUR SET nom=%s, prenom=%s, email=%s, genre=%s, photo_profil=%s
                        WHERE id_utilisateur=%s""",
-                    (nom, prenom, email, genre, photo_profil, user_id)
+                    (nom, prenom, email, genre, photo_profil, user_id),
                 )
             else:
                 cur.execute(
                     "UPDATE UTILISATEUR SET nom=%s, prenom=%s, email=%s, genre=%s WHERE id_utilisateur=%s",
-                    (nom, prenom, email, genre, user_id)
+                    (nom, prenom, email, genre, user_id),
                 )
         conn.commit()
         return True
@@ -440,14 +525,16 @@ def update_utilisateur_profil(user_id: int, nom: str, prenom: str, email: str,
     finally:
         conn.close()
 
+
 def update_utilisateur_password(user_id: int, new_password: str) -> bool:
     conn = get_db_connection()
-    if not conn: return False
+    if not conn:
+        return False
     try:
         with conn.cursor() as cur:
             cur.execute(
                 "UPDATE UTILISATEUR SET mot_de_passe_hash=%s WHERE id_utilisateur=%s",
-                (hash_password(new_password), user_id)
+                (hash_password(new_password), user_id),
             )
         conn.commit()
         return True
@@ -458,10 +545,12 @@ def update_utilisateur_password(user_id: int, new_password: str) -> bool:
     finally:
         conn.close()
 
+
 def get_all_utilisateurs() -> List[Dict[str, Any]]:
     """Pour le dashboard admin."""
     conn = get_db_connection()
-    if not conn: return []
+    if not conn:
+        return []
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("""
@@ -480,22 +569,37 @@ def get_all_utilisateurs() -> List[Dict[str, Any]]:
     finally:
         conn.close()
 
+
 # ----------------------------------------------------
 # 6. CRUD Propositions
 # ----------------------------------------------------
 
-def create_proposition(nom_fr: str, nom_scientifique: str, description: str,
-                        url_image: Optional[str], id_categorie: int,
-                        id_utilisateur: int) -> bool:
+
+def create_proposition(
+    nom_fr: str,
+    nom_scientifique: str,
+    description: str,
+    url_image: Optional[str],
+    id_categorie: int,
+    id_utilisateur: int,
+) -> bool:
     conn = get_db_connection()
-    if not conn: return False
+    if not conn:
+        return False
     try:
         with conn.cursor() as cur:
             cur.execute(
                 """INSERT INTO PROPOSITION
                    (nom_fr, nom_scientifique, description, url_image, fk_id_categorie, fk_id_utilisateur)
                    VALUES (%s, %s, %s, %s, %s, %s)""",
-                (nom_fr, nom_scientifique, description, url_image, id_categorie, id_utilisateur)
+                (
+                    nom_fr,
+                    nom_scientifique,
+                    description,
+                    url_image,
+                    id_categorie,
+                    id_utilisateur,
+                ),
             )
         conn.commit()
         return True
@@ -506,9 +610,11 @@ def create_proposition(nom_fr: str, nom_scientifique: str, description: str,
     finally:
         conn.close()
 
+
 def get_all_propositions() -> List[Dict[str, Any]]:
     conn = get_db_connection()
-    if not conn: return []
+    if not conn:
+        return []
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("""
@@ -528,18 +634,23 @@ def get_all_propositions() -> List[Dict[str, Any]]:
     finally:
         conn.close()
 
+
 def get_propositions_by_user(user_id: int) -> List[Dict[str, Any]]:
     conn = get_db_connection()
-    if not conn: return []
+    if not conn:
+        return []
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT p.*, c.nom_categorie
                 FROM PROPOSITION p
                 JOIN CATEGORIE c ON p.fk_id_categorie = c.id_categorie
                 WHERE p.fk_id_utilisateur = %s
                 ORDER BY p.date_proposition DESC
-            """, (user_id,))
+            """,
+                (user_id,),
+            )
             return cur.fetchall()
     except Exception as e:
         print(f"Erreur propositions user: {e}")
@@ -547,37 +658,51 @@ def get_propositions_by_user(user_id: int) -> List[Dict[str, Any]]:
     finally:
         conn.close()
 
-def traiter_proposition(id_proposition: int, statut: str, commentaire: str,
-                         nom_fr: str = None, nom_scientifique: str = None,
-                         description: str = None, id_categorie: int = None) -> bool:
+
+def traiter_proposition(
+    id_proposition: int,
+    statut: str,
+    commentaire: str,
+    nom_fr: str = None,
+    nom_scientifique: str = None,
+    description: str = None,
+    id_categorie: int = None,
+) -> bool:
     conn = get_db_connection()
-    if not conn: return False
+    if not conn:
+        return False
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("""
+            cur.execute(
+                """
                 UPDATE PROPOSITION SET statut=%s, commentaire_admin=%s,
                 date_traitement=NOW(), notif_lue=FALSE
                 WHERE id_proposition=%s
                 RETURNING *
-            """, (statut, commentaire, id_proposition))
+            """,
+                (statut, commentaire, id_proposition),
+            )
             prop = cur.fetchone()
 
-            if statut in ('accepte', 'modifie'):
-                cur.execute("""
+            if statut in ("accepte", "modifie"):
+                cur.execute(
+                    """
                     INSERT INTO OBJET_CELESTE
                     (nom_fr, nom_scientifique, description, url_image,
                      date_publication, fk_id_categorie, fk_id_utilisateur)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (nom_fr) DO NOTHING
-                """, (
-                    nom_fr or prop['nom_fr'],
-                    nom_scientifique or prop['nom_scientifique'],
-                    description or prop['description'],
-                    prop['url_image'],
-                    date.today(),
-                    id_categorie or prop['fk_id_categorie'],
-                    prop['fk_id_utilisateur']
-                ))
+                """,
+                    (
+                        nom_fr or prop["nom_fr"],
+                        nom_scientifique or prop["nom_scientifique"],
+                        description or prop["description"],
+                        prop["url_image"],
+                        date.today(),
+                        id_categorie or prop["fk_id_categorie"],
+                        prop["fk_id_utilisateur"],
+                    ),
+                )
         conn.commit()
         return True
     except Exception as e:
@@ -587,30 +712,34 @@ def traiter_proposition(id_proposition: int, statut: str, commentaire: str,
     finally:
         conn.close()
 
+
 def count_notifs_non_lues(user_id: int) -> int:
     conn = get_db_connection()
-    if not conn: return 0
+    if not conn:
+        return 0
     try:
         with conn.cursor() as cur:
             cur.execute(
                 """SELECT COUNT(*) FROM PROPOSITION
                    WHERE fk_id_utilisateur=%s AND notif_lue=FALSE AND statut != 'en_attente'""",
-                (user_id,)
+                (user_id,),
             )
             return cur.fetchone()[0]
-    except:
+    except Exception:
         return 0
     finally:
         conn.close()
 
+
 def marquer_notifs_lues(user_id: int) -> None:
     conn = get_db_connection()
-    if not conn: return
+    if not conn:
+        return
     try:
         with conn.cursor() as cur:
             cur.execute(
                 "UPDATE PROPOSITION SET notif_lue=TRUE WHERE fk_id_utilisateur=%s AND notif_lue=FALSE",
-                (user_id,)
+                (user_id,),
             )
         conn.commit()
     except Exception as e:
@@ -618,19 +747,22 @@ def marquer_notifs_lues(user_id: int) -> None:
     finally:
         conn.close()
 
+
 # ----------------------------------------------------
 # 7. CRUD Favoris
 # ----------------------------------------------------
 
+
 def toggle_favori(user_id: int, objet_id: int) -> Dict[str, Any]:
     """Ajoute ou supprime un favori. Retourne le nouvel état."""
     conn = get_db_connection()
-    if not conn: return {'est_favori': False, 'error': True}
+    if not conn:
+        return {"est_favori": False, "error": True}
     try:
         with conn.cursor() as cur:
             cur.execute(
                 "SELECT id_favori FROM FAVORI WHERE fk_id_utilisateur=%s AND fk_id_objet=%s",
-                (user_id, objet_id)
+                (user_id, objet_id),
             )
             existing = cur.fetchone()
             if existing:
@@ -639,7 +771,7 @@ def toggle_favori(user_id: int, objet_id: int) -> Dict[str, Any]:
             else:
                 cur.execute(
                     "INSERT INTO FAVORI (fk_id_utilisateur, fk_id_objet) VALUES (%s, %s)",
-                    (user_id, objet_id)
+                    (user_id, objet_id),
                 )
                 est_favori = True
         conn.commit()
@@ -647,21 +779,24 @@ def toggle_favori(user_id: int, objet_id: int) -> Dict[str, Any]:
         with conn.cursor() as cur:
             cur.execute("SELECT COUNT(*) FROM FAVORI WHERE fk_id_objet=%s", (objet_id,))
             count = cur.fetchone()[0]
-        return {'est_favori': est_favori, 'count': count, 'error': False}
+        return {"est_favori": est_favori, "count": count, "error": False}
     except Exception as e:
         print(f"❌ Erreur toggle favori : {e}")
         conn.rollback()
-        return {'est_favori': False, 'error': True}
+        return {"est_favori": False, "error": True}
     finally:
         conn.close()
+
 
 def get_favoris_utilisateur(user_id: int) -> List[Dict[str, Any]]:
     """Récupère tous les favoris d'un utilisateur avec les détails des objets."""
     conn = get_db_connection()
-    if not conn: return []
+    if not conn:
+        return []
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT o.id_objet, o.nom_fr, o.nom_scientifique,
                        LEFT(o.description, 150) AS extrait_description,
                        o.url_image, o.date_publication, c.nom_categorie,
@@ -673,7 +808,9 @@ def get_favoris_utilisateur(user_id: int) -> List[Dict[str, Any]]:
                 LEFT JOIN UTILISATEUR u ON o.fk_id_utilisateur = u.id_utilisateur
                 WHERE f.fk_id_utilisateur = %s
                 ORDER BY f.date_ajout DESC
-            """, (user_id,))
+            """,
+                (user_id,),
+            )
             return cur.fetchall()
     except Exception as e:
         print(f"Erreur favoris utilisateur: {e}")
@@ -681,15 +818,16 @@ def get_favoris_utilisateur(user_id: int) -> List[Dict[str, Any]]:
     finally:
         conn.close()
 
+
 def get_favoris_ids_utilisateur(user_id: int) -> List[int]:
     """Retourne la liste des id_objet mis en favori par un utilisateur."""
     conn = get_db_connection()
-    if not conn: return []
+    if not conn:
+        return []
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT fk_id_objet FROM FAVORI WHERE fk_id_utilisateur=%s",
-                (user_id,)
+                "SELECT fk_id_objet FROM FAVORI WHERE fk_id_utilisateur=%s", (user_id,)
             )
             return [r[0] for r in cur.fetchall()]
     except Exception as e:
@@ -698,25 +836,29 @@ def get_favoris_ids_utilisateur(user_id: int) -> List[int]:
     finally:
         conn.close()
 
+
 def count_favoris_objet(objet_id: int) -> int:
     """Nombre total de fois qu'un objet a été mis en favori."""
     conn = get_db_connection()
-    if not conn: return 0
+    if not conn:
+        return 0
     try:
         with conn.cursor() as cur:
             cur.execute("SELECT COUNT(*) FROM FAVORI WHERE fk_id_objet=%s", (objet_id,))
             return cur.fetchone()[0]
-    except:
+    except Exception:
         return 0
     finally:
         conn.close()
+
 
 def get_favoris_counts_batch(objet_ids: List[int]) -> Dict[int, int]:
     """Récupère les compteurs de favoris pour une liste d'objets en UNE seule requête."""
     if not objet_ids:
         return {}
     conn = get_db_connection()
-    if not conn: return {}
+    if not conn:
+        return {}
     try:
         with conn.cursor() as cur:
             cur.execute(
@@ -724,7 +866,7 @@ def get_favoris_counts_batch(objet_ids: List[int]) -> Dict[int, int]:
                    FROM FAVORI
                    WHERE fk_id_objet = ANY(%s)
                    GROUP BY fk_id_objet""",
-                (objet_ids,)
+                (objet_ids,),
             )
             return {row[0]: row[1] for row in cur.fetchall()}
     except Exception as e:
@@ -733,31 +875,35 @@ def get_favoris_counts_batch(objet_ids: List[int]) -> Dict[int, int]:
     finally:
         conn.close()
 
+
 def est_favori(user_id: int, objet_id: int) -> bool:
     """Vérifie si un objet est en favori pour un utilisateur."""
     conn = get_db_connection()
-    if not conn: return False
+    if not conn:
+        return False
     try:
         with conn.cursor() as cur:
             cur.execute(
                 "SELECT 1 FROM FAVORI WHERE fk_id_utilisateur=%s AND fk_id_objet=%s",
-                (user_id, objet_id)
+                (user_id, objet_id),
             )
             return cur.fetchone() is not None
-    except:
+    except Exception:
         return False
     finally:
         conn.close()
 
+
 def get_favoris_counts() -> Dict[int, int]:
     """Retourne un dict {id_objet: nb_favoris} en une seule requête."""
     conn = get_db_connection()
-    if not conn: return {}
+    if not conn:
+        return {}
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT fk_id_objet, COUNT(*) 
-                FROM FAVORI 
+                SELECT fk_id_objet, COUNT(*)
+                FROM FAVORI
                 GROUP BY fk_id_objet
             """)
             return {row[0]: row[1] for row in cur.fetchall()}
