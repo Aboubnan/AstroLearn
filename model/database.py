@@ -267,7 +267,26 @@ def search_celestial_objects(search_term: str) -> List[Dict[str, Any]]:
     conn = get_db_connection()
     if not conn:
         return []
-    p = f"%{search_term.lower()}%"
+
+    # Dictionnaire de traduction FR → EN pour la recherche
+    translations = {
+        "terre": "earth", "lune": "moon", "soleil": "sun",
+        "mars": "mars", "jupiter": "jupiter", "saturne": "saturn",
+        "vénus": "venus", "venus": "venus", "mercure": "mercury",
+        "uranus": "uranus", "neptune": "neptune", "pluton": "pluto",
+        "étoile": "star", "galaxie": "galaxy", "nébuleuse": "nebula",
+        "comète": "comet", "astéroïde": "asteroid", "planète": "planet",
+        "trou noir": "black hole", "supernova": "supernova",
+        "voie lactée": "milky way", "andromède": "andromeda",
+    }
+
+    term_lower = search_term.lower()
+    # Cherche aussi la traduction anglaise si disponible
+    translated_term = translations.get(term_lower, term_lower)
+
+    p1 = f"%{term_lower}%"
+    p2 = f"%{translated_term}%"
+
     query = """
     SELECT o.id_objet, o.nom_fr, o.nom_scientifique,
            LEFT(o.description, 150) AS extrait_description,
@@ -278,11 +297,13 @@ def search_celestial_objects(search_term: str) -> List[Dict[str, Any]]:
     LEFT JOIN UTILISATEUR u ON o.fk_id_utilisateur = u.id_utilisateur
     WHERE LOWER(o.nom_fr) LIKE %s OR LOWER(o.nom_scientifique) LIKE %s
        OR LOWER(o.description) LIKE %s
+       OR LOWER(o.nom_fr) LIKE %s OR LOWER(o.nom_scientifique) LIKE %s
+       OR LOWER(o.description) LIKE %s
     ORDER BY o.date_publication DESC;
     """
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute(query, (p, p, p))
+            cur.execute(query, (p1, p1, p1, p2, p2, p2))
             return cur.fetchall()
     except Exception as e:
         print(f"Erreur recherche: {e}")
