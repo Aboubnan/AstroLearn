@@ -574,6 +574,23 @@ def update_utilisateur_profil(
         conn.close()
 
 
+def delete_utilisateur(user_id: int) -> bool:
+    conn = get_db_connection()
+    if not conn:
+        return False
+    try:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM UTILISATEUR WHERE id_utilisateur=%s", (user_id,))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"❌ Erreur suppression utilisateur : {e}")
+        conn.rollback()
+        return False
+    finally:
+        conn.close()
+
+
 def update_utilisateur_password(user_id: int, new_password: str) -> bool:
     conn = get_db_connection()
     if not conn:
