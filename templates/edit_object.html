@@ -40,7 +40,7 @@
             <div class="flex items-center space-x-6 p-4 bg-gray-900 rounded-xl border border-gray-700">
                 <div class="flex-shrink-0">
                     <p class="text-xs text-gray-500 mb-2">Actuelle :</p>
-                    <img src="{% if 'http' in obj[5] %}{{ obj[5] }}{% else %}{{ url_for('static', filename=obj[5]) }}{% endif %}" 
+                    <img src="{% if obj[5] and 'http' in obj[5] %}{{ obj[5] }}{% elif obj[5] %}{{ url_for('static', filename=obj[5]) }}{% else %}https://placehold.co/100?text=No+Img{% endif %}"
                          class="w-24 h-24 object-cover rounded-lg border border-gray-600"
                          onerror="this.src='https://placehold.co/100?text=No+Img'">
                 </div>
