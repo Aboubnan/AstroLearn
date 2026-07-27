@@ -635,6 +635,21 @@ def get_all_utilisateurs() -> List[Dict[str, Any]]:
         conn.close()
 
 
+def count_utilisateurs() -> int:
+    """Nombre total d'utilisateurs inscrits (pour affichage public)."""
+    conn = get_db_connection()
+    if not conn:
+        return 0
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM UTILISATEUR")
+            return cur.fetchone()[0]
+    except Exception:
+        return 0
+    finally:
+        conn.close()
+
+
 # ----------------------------------------------------
 # 6. CRUD Propositions
 # ----------------------------------------------------
