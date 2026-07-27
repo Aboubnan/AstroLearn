@@ -8,6 +8,18 @@ from model.database import (
 auth_bp = Blueprint("auth_bp", __name__)
 
 
+@auth_bp.after_request
+def add_no_cache_headers(response):
+    """Empêche le navigateur de mettre en cache /connexion et /deconnexion.
+
+    Sans ça, un navigateur peut réutiliser une ancienne redirection mise en
+    cache (ex: vers admin_dashboard obtenue quand la session était encore
+    active) au lieu de redemander l'état actuel au serveur.
+    """
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    return response
+
+
 @auth_bp.route("/connexion", methods=["GET", "POST"])
 def login():
     # Déjà connecté → rediriger vers le bon espace
