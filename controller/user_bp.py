@@ -280,10 +280,3 @@ def toggle_favori_route(objet_id):
     return jsonify(
         {"success": True, "est_favori": result["est_favori"], "count": result["count"]}
     )
-
-
-@user_bp.route("/mes-favoris")
-@login_required
-def mes_favoris():
-    favoris = get_favoris_utilisateur(session["user_id"])
-    return render_template("mes_favoris.html", favoris=favoris)
