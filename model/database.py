@@ -3,7 +3,14 @@ from psycopg2.extras import RealDictCursor
 import bcrypt
 from typing import List, Dict, Any, Optional
 from datetime import date
-from config import DATABASE_URL
+from config import (
+    DATABASE_URL,
+    ADMIN_PSEUDO,
+    ADMIN_PASSWORD,
+    ADMIN_EMAIL,
+    ADMIN_NOM,
+    ADMIN_PRENOM,
+)
 
 # ----------------------------------------------------
 # 1. SQL — Modèle Physique de Données
@@ -183,17 +190,23 @@ def insert_initial_data() -> None:
                 "INSERT INTO CATEGORIE (nom_categorie) VALUES (%s) ON CONFLICT DO NOTHING",
                 categories,
             )
-            cur.execute(
-                """INSERT INTO ADMINISTRATEUR (pseudo, mot_de_passe_hash, nom, prenom, email)
-                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING""",
-                (
-                    "webmaster",
-                    hash_password("admin123"),
-                    "Admin",
-                    "Super",
-                    "admin@astrolearn.fr",
-                ),
-            )
+            if ADMIN_PSEUDO and ADMIN_PASSWORD and ADMIN_EMAIL:
+                cur.execute(
+                    """INSERT INTO ADMINISTRATEUR (pseudo, mot_de_passe_hash, nom, prenom, email)
+                       VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING""",
+                    (
+                        ADMIN_PSEUDO,
+                        hash_password(ADMIN_PASSWORD),
+                        ADMIN_NOM,
+                        ADMIN_PRENOM,
+                        ADMIN_EMAIL,
+                    ),
+                )
+            else:
+                print(
+                    "ℹ️ Aucun admin créé automatiquement "
+                    "(ADMIN_PSEUDO/ADMIN_PASSWORD/ADMIN_EMAIL absents du .env)."
+                )
         conn.commit()
         print("✅ Données initiales insérées.")
     except Exception as e:
@@ -270,14 +283,28 @@ def search_celestial_objects(search_term: str) -> List[Dict[str, Any]]:
 
     # Dictionnaire de traduction FR → EN pour la recherche
     translations = {
-        "terre": "earth", "lune": "moon", "soleil": "sun",
-        "mars": "mars", "jupiter": "jupiter", "saturne": "saturn",
-        "vénus": "venus", "venus": "venus", "mercure": "mercury",
-        "uranus": "uranus", "neptune": "neptune", "pluton": "pluto",
-        "étoile": "star", "galaxie": "galaxy", "nébuleuse": "nebula",
-        "comète": "comet", "astéroïde": "asteroid", "planète": "planet",
-        "trou noir": "black hole", "supernova": "supernova",
-        "voie lactée": "milky way", "andromède": "andromeda",
+        "terre": "earth",
+        "lune": "moon",
+        "soleil": "sun",
+        "mars": "mars",
+        "jupiter": "jupiter",
+        "saturne": "saturn",
+        "vénus": "venus",
+        "venus": "venus",
+        "mercure": "mercury",
+        "uranus": "uranus",
+        "neptune": "neptune",
+        "pluton": "pluto",
+        "étoile": "star",
+        "galaxie": "galaxy",
+        "nébuleuse": "nebula",
+        "comète": "comet",
+        "astéroïde": "asteroid",
+        "planète": "planet",
+        "trou noir": "black hole",
+        "supernova": "supernova",
+        "voie lactée": "milky way",
+        "andromède": "andromeda",
     }
 
     term_lower = search_term.lower()

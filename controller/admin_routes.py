@@ -23,6 +23,7 @@ from model.database import (
     get_all_utilisateurs,
 )
 from model.api_utils import ingest_solar_system_data_paged
+from controller.user_bp import allowed_file
 from werkzeug.utils import secure_filename
 from datetime import date
 from deep_translator import GoogleTranslator
@@ -79,6 +80,9 @@ def admin_logout() -> Response:
 @admin_required
 def admin_dashboard():
     conn = get_db_connection()
+    if not conn:
+        flash("Erreur de connexion à la base de données.", "error")
+        return redirect(url_for("main_bp.index"))
     cur = conn.cursor()
 
     cur.execute("SELECT COUNT(*) FROM objet_celeste")
@@ -152,6 +156,9 @@ def admin_dashboard():
 @admin_required
 def add_celestial_object():
     conn = get_db_connection()
+    if not conn:
+        flash("Erreur de connexion à la base de données.", "error")
+        return redirect(url_for("admin_bp.admin_dashboard"))
     cur = conn.cursor()
 
     if request.method == "POST":
@@ -161,7 +168,7 @@ def add_celestial_object():
         file = request.files.get("image")
 
         image_url = "images/default_astro.png"
-        if file and file.filename != "":
+        if file and file.filename != "" and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             upload_path = os.path.join("static", "uploads", "objects")
             os.makedirs(upload_path, exist_ok=True)
@@ -197,6 +204,9 @@ def add_celestial_object():
 @admin_required
 def edit_celestial_object(object_id):
     conn = get_db_connection()
+    if not conn:
+        flash("Erreur de connexion à la base de données.", "error")
+        return redirect(url_for("admin_bp.admin_dashboard"))
     cur = conn.cursor()
 
     if request.method == "POST":
@@ -234,6 +244,9 @@ def edit_celestial_object(object_id):
 @admin_required
 def delete_celestial_object(object_id):
     conn = get_db_connection()
+    if not conn:
+        flash("Erreur de connexion à la base de données.", "error")
+        return redirect(url_for("admin_bp.admin_dashboard"))
     cur = conn.cursor()
     try:
         cur.execute("DELETE FROM objet_celeste WHERE id_objet = %s", (object_id,))
@@ -271,6 +284,9 @@ def add_admin():
         return redirect(url_for("admin_bp.admin_dashboard") + "#section-admins")
 
     conn = get_db_connection()
+    if not conn:
+        flash("Erreur de connexion à la base de données.", "error")
+        return redirect(url_for("admin_bp.admin_dashboard") + "#section-admins")
     cur = conn.cursor()
 
     cur.execute("SELECT id_admin FROM ADMINISTRATEUR WHERE pseudo = %s", (pseudo,))
@@ -325,6 +341,9 @@ def edit_admin(admin_id):
         return redirect(url_for("admin_bp.admin_dashboard") + "#section-admins")
 
     conn = get_db_connection()
+    if not conn:
+        flash("Erreur de connexion à la base de données.", "error")
+        return redirect(url_for("admin_bp.admin_dashboard") + "#section-admins")
     cur = conn.cursor()
     try:
         if new_password:
@@ -364,6 +383,9 @@ def delete_admin(admin_id):
         return redirect(url_for("admin_bp.admin_dashboard") + "#section-admins")
 
     conn = get_db_connection()
+    if not conn:
+        flash("Erreur de connexion à la base de données.", "error")
+        return redirect(url_for("admin_bp.admin_dashboard") + "#section-admins")
     cur = conn.cursor()
     cur.execute("SELECT COUNT(*) FROM ADMINISTRATEUR")
     if cur.fetchone()[0] <= 1:
@@ -432,6 +454,9 @@ def traiter_proposition_route(prop_id):
 @admin_required
 def toggle_user(user_id):
     conn = get_db_connection()
+    if not conn:
+        flash("Erreur de connexion à la base de données.", "error")
+        return redirect(url_for("admin_bp.admin_dashboard") + "#section-utilisateurs")
     cur = conn.cursor()
     try:
         cur.execute(
@@ -474,7 +499,9 @@ def translate_text():
         return jsonify({"translated_text": text})
     try:
         source_lang = "auto"
-        translated = GoogleTranslator(source=source_lang, target=target_lang).translate(text)
+        translated = GoogleTranslator(source=source_lang, target=target_lang).translate(
+            text
+        )
         return jsonify({"translated_text": translated})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
