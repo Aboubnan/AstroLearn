@@ -34,13 +34,15 @@ def retry_with_backoff(func: Callable) -> Callable:
 def call_gemini_api(
     user_input: str,
     system_instruction: Optional[str] = None,
-    history: List[Dict[str, str]] = [],
+    history: Optional[List[Dict[str, str]]] = None,
 ) -> Optional[str]:
     """
     Appelle l'API Gemini 2.5 Flash avec support de l'historique et des instructions système.
     """
     if not API_KEY:
         return "❌ Erreur : Clé API manquante dans le fichier .env"
+
+    history = history or []
 
     # 1. Préparation de l'historique au format Gemini (user -> user, assistant -> model)
     contents = []
@@ -195,41 +197,6 @@ def ingest_solar_system_data_paged(search_term: str, max_pages: int) -> int:
                     total_success_count += 1
             except Exception as e:
                 print(f"❌ Erreur lors de l'ingestion de {title}: {e}")
-                continue
-
-    return total_success_count
-    """Orchestre l'ingestion de données NASA vers PostgreSQL."""
-    total_success_count: int = 0
-    translation_map = {
-        "Sun": "Soleil",
-        "Earth": "Terre",
-        "Moon": "Lune",
-    }  # Simplifié pour l'exemple
-
-    for page in range(1, max_pages + 1):
-        data = get_paged_nasa_search_data(search_term, page)
-        if not data:
-            break
-
-        for item in data:
-            try:
-                nasa_id = item.get("nasa_id", "")
-                title = item.get("title", "Unknown")
-                image_url = f"https://images-assets.nasa.gov/image/{nasa_id}/{nasa_id}~thumb.jpg"
-
-                # Note: insert_solar_system_body utilise maintenant PostgreSQL via ton model/database.py
-                result = insert_solar_system_body(
-                    name_fr=translation_map.get(title, title),
-                    name_en=title,
-                    description=item.get("description", ""),
-                    body_type="Object",
-                    mass_value=None,
-                    density=None,
-                    image_url=image_url,
-                )
-                if result:
-                    total_success_count += 1
-            except Exception:
                 continue
 
     return total_success_count
