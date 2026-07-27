@@ -16,7 +16,8 @@
 
         <div>
             <label class="block text-gray-400 mb-2 font-medium">Type d'astre</label>
-            <select name="category_id" required class="...">
+            <select name="category_id" required
+                    class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-green-500 transition">
                 <option value="" disabled selected>-- Sélectionnez --</option>
                 {% for cat in categories %}
                     {# cat[0] est l'ID (ex: 1, 2, 3) #}

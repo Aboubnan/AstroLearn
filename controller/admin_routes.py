@@ -89,13 +89,6 @@ def admin_dashboard():
     cur.execute("SELECT COUNT(*) FROM objet_celeste")
     count_objects = cur.fetchone()[0]
 
-    try:
-        cur.execute("SELECT COUNT(*) FROM historique_ia")
-        count_ia = cur.fetchone()[0]
-    except Exception:
-        conn.rollback()
-        count_ia = "0"
-
     cur.execute("""
         SELECT o.id_objet, o.nom_fr, o.date_publication, c.nom_categorie
         FROM objet_celeste o
@@ -142,7 +135,6 @@ def admin_dashboard():
         "admin_dashboard.html",
         objects=objects,
         count_objects=count_objects,
-        count_ia=count_ia,
         admins=admins,
         propositions=propositions,
         nb_en_attente=nb_en_attente,
