@@ -25,6 +25,11 @@ build/
 *.sqlite3
 static/uploads/objects/*
 !static/uploads/objects/.gitkeep
+static/uploads/profils/*
+!static/uploads/profils/.gitkeep
+!static/uploads/profils/default_avatar.png
+static/uploads/propositions/*
+!static/uploads/propositions/.gitkeep
 
 # --- IDE & OS ---
 .vscode/
