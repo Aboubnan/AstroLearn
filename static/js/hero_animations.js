@@ -1,52 +1,6 @@
 // Animations pour la page d'accueil
 
-// Animation des particules
-const canvas = document.getElementById('particles-canvas');
-if (canvas) {
-    const ctx = canvas.getContext('2d');
-
-    function resizeCanvas() {
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    const particles = [];
-    const particleCount = 150;
-
-    for (let i = 0; i < particleCount; i++) {
-        particles.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            vx: (Math.random() - 0.5) * 0.5,
-            vy: (Math.random() - 0.5) * 0.5,
-            size: Math.random() * 2 + 1
-        });
-    }
-
-    function animateParticles() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        
-        particles.forEach(p => {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fill();
-            
-            p.x += p.vx;
-            p.y += p.vy;
-            
-            if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-            if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-        });
-        
-        requestAnimationFrame(animateParticles);
-    }
-    animateParticles();
-}
-
-// Animation des compteurs
+// Animation des compteurs (déclenchée quand ils entrent dans le viewport)
 const counters = document.querySelectorAll('.counter');
 const observerOptions = { threshold: 0.5 };
 
@@ -58,7 +12,7 @@ const counterObserver = new IntersectionObserver((entries) => {
             const duration = 2000;
             const increment = target / (duration / 16);
             let current = 0;
-            
+
             const updateCounter = () => {
                 current += increment;
                 if (current < target) {
@@ -68,7 +22,7 @@ const counterObserver = new IntersectionObserver((entries) => {
                     counter.textContent = target;
                 }
             };
-            
+
             updateCounter();
             counterObserver.unobserve(counter);
         }
@@ -85,28 +39,5 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         if (target) {
             target.scrollIntoView({ behavior: 'smooth' });
         }
-    });
-});
-
-// Dans static/js/hero_animations.js
-document.addEventListener('DOMContentLoaded', () => {
-    const counters = document.querySelectorAll('.counter');
-    
-    counters.forEach(counter => {
-        const updateCount = () => {
-            // Si c'est le compteur d'objets célestes, on peut simuler le 420 
-            // ou récupérer la valeur si planets est défini
-            const target = +counter.getAttribute('data-target') || 420;
-            const count = +counter.innerText;
-            const speed = target / 100;
-
-            if (count < target) {
-                counter.innerText = Math.ceil(count + speed);
-                setTimeout(updateCount, 20);
-            } else {
-                counter.innerText = target;
-            }
-        };
-        updateCount();
     });
 });
