@@ -11,6 +11,8 @@
 </head>
 
 <body class="min-h-screen flex flex-col">
+    <canvas id="starfield-canvas" class="fixed inset-0 -z-10 pointer-events-none"></canvas>
+
     <header class="bg-gray-900 shadow-lg sticky top-0 z-50 text-white">
     <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
 
@@ -186,6 +188,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/starfield.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
     const btn = document.getElementById('mobile-menu-button');
