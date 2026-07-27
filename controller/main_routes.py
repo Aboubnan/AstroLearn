@@ -23,6 +23,7 @@ from model.database import (
     count_favoris_objet,
     get_favoris_counts,
     est_favori,
+    count_utilisateurs,
 )
 
 # Blueprint creation
@@ -39,6 +40,7 @@ def index() -> str:
         "home.html",
         total_objects=len(all_objects) if all_objects else 0,
         total_categories=len(all_categories) if all_categories else 0,
+        total_users=count_utilisateurs(),
         now=datetime.datetime.now(),
         title="Home - AstroLearn",
     )
