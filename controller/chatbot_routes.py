@@ -66,6 +66,3 @@ def api_chatbot() -> Union[Response, Tuple[Response, int]]:
     except Exception as e:
         print(f"❌ Erreur inattendue dans api_chatbot: {e}")
         return jsonify({"error": "Une erreur technique est survenue."}), 500
-
-
-# Les routes suggestions et health restent identiques...
