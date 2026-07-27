@@ -21,6 +21,7 @@ from model.database import (
     get_all_propositions,
     traiter_proposition,
     get_all_utilisateurs,
+    delete_utilisateur,
 )
 from model.api_utils import ingest_solar_system_data_paged
 from controller.user_bp import allowed_file
@@ -473,6 +474,16 @@ def toggle_user(user_id):
     finally:
         cur.close()
         conn.close()
+    return redirect(url_for("admin_bp.admin_dashboard") + "#section-utilisateurs")
+
+
+@admin_bp.route("/admin/delete-user/<int:user_id>", methods=["POST"])
+@admin_required
+def delete_user(user_id):
+    if delete_utilisateur(user_id):
+        flash("Utilisateur supprimé.", "success")
+    else:
+        flash("Erreur lors de la suppression de l'utilisateur.", "error")
     return redirect(url_for("admin_bp.admin_dashboard") + "#section-utilisateurs")
 
 
