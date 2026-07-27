@@ -112,26 +112,35 @@
 
     let cache = {};
 
-    async function applyLanguage(lang) {                                                                                                                                           const loader = document.getElementById('loader');                                                                                                                             const elements = {                                                                                                                                                                title:   document.getElementById('trans-title'),                                                                                                                              cat:     document.getElementById('trans-cat'),                                                                                                                                catTech: document.getElementById('trans-cat-tech'),                                                                                                                           desc:    document.getElementById('trans-desc')                                                                                                                            };                                                                                                                                                                                                                                                                                                                                                          document.getElementById('lang-en').className = `px-4 py-1 rounded-full text-xs font-bold transition-all ${lang === 'en' ? 'bg-accent text-gray-900' : 'text-gray-500 hove>    document.getElementById('lang-fr').className = `px-4 py-1 rounded-full text-xs font-bold transition-all ${lang === 'fr' ? 'bg-accent text-gray-900' : 'text-gray-500 hove>
+    async function applyLanguage(lang) {
+        const loader = document.getElementById('loader');
+        const elements = {
+            title:   document.getElementById('trans-title'),
+            cat:     document.getElementById('trans-cat'),
+            catTech: document.getElementById('trans-cat-tech'),
+            desc:    document.getElementById('trans-desc')
+        };
 
-    // Détecter si le texte original est en anglais
-    const isEnglish = /^[\x00-\x7F]+$/.test(
-        originalData.desc.substring(0, 100)
-    );
+        document.getElementById('lang-en').className = `px-4 py-1 rounded-full text-xs font-bold transition-all ${lang === 'en' ? 'bg-accent text-gray-900' : 'text-gray-500 hover:text-white'}`;
+        document.getElementById('lang-fr').className = `px-4 py-1 rounded-full text-xs font-bold transition-all ${lang === 'fr' ? 'bg-accent text-gray-900' : 'text-gray-500 hover:text-white'}`;
 
-    // Si la langue demandée correspond à la langue originale → afficher sans traduire
-    if ((lang === 'en' && isEnglish) || (lang === 'fr' && !isEnglish)) {
-        updateUI(originalData, elements);
-        return;
-    }
+        // Détecter si le texte original est en anglais (absence de caractères accentués français)
+        const frenchChars = /[àâäéèêëîïôöùûüçœ]/i;
+        const isEnglish = !frenchChars.test(originalData.desc.substring(0, 200));
 
-    // Utiliser le cache si disponible
-    if (cache[lang]) {
-        updateUI(cache[lang], elements);
-        return;
-    }
+        // Si la langue demandée correspond à la langue originale → afficher sans traduire
+        if ((lang === 'en' && isEnglish) || (lang === 'fr' && !isEnglish)) {
+            updateUI(originalData, elements);
+            return;
+        }
 
-    loader.classList.remove('hidden');
+        // Utiliser le cache si disponible
+        if (cache[lang]) {
+            updateUI(cache[lang], elements);
+            return;
+        }
+
+        loader.classList.remove('hidden');
 
         try {
             const textsToTranslate = [originalData.title, originalData.cat, originalData.desc];
