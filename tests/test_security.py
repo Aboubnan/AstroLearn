@@ -12,5 +12,22 @@ def test_encryption():
     assert not check_password(hashed, "MauvaisMotDePasse")
 
 
+def test_hash_password_is_salted():
+    """Deux hachages du même mot de passe doivent différer (sel bcrypt aléatoire)."""
+    mdp_test = "Astro123!"
+
+    assert hash_password(mdp_test) != hash_password(mdp_test)
+
+
+def test_hash_password_uses_bcrypt_format():
+    hashed = hash_password("Astro123!")
+
+    assert hashed.startswith(
+        ("$2a$", "$2b$", "$2y$")
+    ), "Le hash ne suit pas le format bcrypt attendu."
+
+
 if __name__ == "__main__":
     test_encryption()
+    test_hash_password_is_salted()
+    test_hash_password_uses_bcrypt_format()

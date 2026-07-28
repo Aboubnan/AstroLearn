@@ -276,10 +276,12 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("📤 Payload envoyé:", payload);
         
         // Appel API Flask
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
         fetch('/api/chatbot', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
             },
             body: JSON.stringify(payload)
         })

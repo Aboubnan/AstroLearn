@@ -20,6 +20,7 @@
     {% endwith %}
 
     <form method="POST" action="{{ url_for('auth_bp.login') }}" class="space-y-5">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Pseudo ou Email</label>

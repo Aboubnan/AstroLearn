@@ -146,7 +146,10 @@
             const textsToTranslate = [originalData.title, originalData.cat, originalData.desc];
             const response = await fetch('/api/translate', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                },
                 body: JSON.stringify({
                     text: textsToTranslate.join(' ||| '),
                     lang: lang

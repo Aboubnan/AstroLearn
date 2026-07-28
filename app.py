@@ -4,6 +4,7 @@ import os
 from datetime import datetime, timedelta
 from typing import Dict
 from flask import Flask
+from flask_wtf import CSRFProtect
 from config import SECRET_KEY, HOST, PORT, DATABASE_URL
 from model.database import initialize_database
 from controller.main_routes import main_bp
@@ -34,6 +35,10 @@ app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True
 )
+
+# PROTECTION CSRF (formulaires HTML + API JSON via header X-CSRFToken)
+csrf = CSRFProtect(app)
+
 
 @app.context_processor
 def inject_current_year() -> Dict[str, int]:

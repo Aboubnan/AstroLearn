@@ -14,6 +14,7 @@
     data-favori="{{ 'true' if est_favori else 'false' }}"
     data-objet-id="{{ objet_id }}"
     title="{{ 'Retirer des favoris' if est_favori else 'Ajouter aux favoris' }}"
+    aria-label="{{ 'Retirer des favoris' if est_favori else 'Ajouter aux favoris' }}"
     class="favori-btn group flex items-center gap-1.5 transition-all
            {% if size == 'lg' %}text-base px-3 py-2 rounded-lg bg-gray-800/80 hover:bg-gray-700{% else %}text-sm{% endif %}">
     <i class="{% if est_favori %}fas fa-heart text-red-400{% else %}far fa-heart text-gray-400 group-hover:text-red-400{% endif %} transition-colors"></i>
@@ -26,6 +27,7 @@
 {% else %}
 <a href="{{ url_for('auth_bp.login') }}"
    title="Connectez-vous pour ajouter aux favoris"
+   aria-label="Connectez-vous pour ajouter aux favoris"
    class="flex items-center gap-1.5 text-gray-500 hover:text-red-400 transition-colors
           {% if size == 'lg' %}text-base px-3 py-2 rounded-lg bg-gray-800/80 hover:bg-gray-700{% else %}text-sm{% endif %}">
     <i class="far fa-heart"></i>
@@ -46,7 +48,10 @@ async function toggleFavori(btn, objetId) {
     icon.className = 'fas fa-spinner fa-spin text-gray-400';
 
     try {
-        const resp = await fetch(`/favori/toggle/${objetId}`, { method: 'POST' });
+        const resp = await fetch(`/favori/toggle/${objetId}`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content }
+        });
         const data = await resp.json();
 
         if (!data.success) throw new Error();

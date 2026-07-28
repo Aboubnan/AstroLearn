@@ -27,6 +27,7 @@
 
         <form method="POST" action="{{ url_for('user_bp.edit_profil') }}"
               enctype="multipart/form-data" class="space-y-5">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <!-- Photo de profil -->
             <div class="flex items-center gap-5">
@@ -99,6 +100,7 @@
         </h2>
 
         <form method="POST" action="{{ url_for('user_bp.change_password') }}" class="space-y-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1">Mot de passe actuel</label>
                 <input type="password" name="current_password" required placeholder="••••••••"

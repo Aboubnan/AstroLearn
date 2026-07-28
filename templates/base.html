@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}{{ title }}{% endblock title %} | AstroLearn</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
@@ -73,7 +74,7 @@
 
         <!-- Burger mobile -->
         <div class="md:hidden">
-            <button id="mobile-menu-button" class="text-2xl focus:outline-none">
+            <button id="mobile-menu-button" aria-label="Ouvrir le menu" class="text-2xl focus:outline-none">
                 <i class="fas fa-bars"></i>
             </button>
         </div>
@@ -161,7 +162,7 @@
 
     <!-- ==================== CHATBOT WIDGET ==================== -->
     <div id="chatbot-widget">
-        <button id="chatbot-open-btn" title="Discuter avec AstroIA" class="hover:scale-110 transition-transform">
+        <button id="chatbot-open-btn" title="Discuter avec AstroIA" aria-label="Discuter avec AstroIA" class="hover:scale-110 transition-transform">
             <img src="{{ url_for('static', filename='images/chatbot2.png') }}"
                  alt="AstroIA"
                  class="w-24 h-24 sm:w-32 sm:h-32 object-contain">
@@ -170,10 +171,10 @@
         <div id="chatbot-window" class="hidden">
             <div class="chatbot-header" style="position: relative;">
                 AstroIA
-                <button id="chatbot-clear-btn" title="Effacer l'historique">
+                <button id="chatbot-clear-btn" title="Effacer l'historique" aria-label="Effacer l'historique">
                     <i class="fas fa-trash-alt"></i>
                 </button>
-                <button id="chatbot-close-btn">&times;</button>
+                <button id="chatbot-close-btn" aria-label="Fermer le chat">&times;</button>
             </div>
             <div id="chatbot-messages"></div>
             <form id="chatbot-form">
