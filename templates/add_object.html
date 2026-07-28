@@ -7,6 +7,7 @@
     </h2>
 
     <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         
         <div>
             <label class="block text-gray-400 mb-2 font-medium">Nom de l'objet</label>
@@ -42,7 +43,7 @@
                               hover:file:bg-indigo-700 transition">
             </div>
             <p class="text-xs text-gray-500 mt-1">Formats acceptés : JPG, PNG, WEBP.</p>
-            <img id="preview" class="mt-4 hidden w-full h-48 object-cover rounded-lg border border-gray-600">
+            <img id="preview" alt="Aperçu de l'image sélectionnée" class="mt-4 hidden w-full h-48 object-cover rounded-lg border border-gray-600">
         </div>
 
         <div class="flex space-x-4 pt-4">
