@@ -137,6 +137,7 @@
                         {% if prop.url_image %}
                         <img src="{{ url_for('static', filename=prop.url_image) }}"
                              alt="{{ prop.nom_fr }}"
+                             loading="lazy"
                              class="w-20 h-20 rounded-lg object-cover flex-shrink-0">
                         {% else %}
                         <div class="w-20 h-20 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0">
@@ -265,6 +266,7 @@
                                 <div class="flex items-center gap-3">
                                     <img src="{{ url_for('static', filename=u.photo_profil) }}"
                                          alt="Photo de {{ u.pseudo }}"
+                                         loading="lazy"
                                          class="w-8 h-8 rounded-full object-cover"
                                          onerror="this.src='{{ url_for('static', filename='uploads/profils/default_avatar.png') }}'">
                                     <div>

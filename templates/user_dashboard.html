@@ -100,6 +100,7 @@
                     {% if prop.url_image %}
                     <img src="{{ url_for('static', filename=prop.url_image) }}"
                          alt="{{ prop.nom_fr }}"
+                         loading="lazy"
                          class="w-16 h-16 rounded-lg object-cover flex-shrink-0">
                     {% else %}
                     <div class="w-16 h-16 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0">
@@ -166,6 +167,7 @@
                     <a href="{{ url_for('main_bp.object_detail', object_id=obj.id_objet) }}" class="flex-shrink-0">
                         <img src="{% if 'http' in obj.url_image %}{{ obj.url_image }}{% else %}{{ url_for('static', filename=obj.url_image) }}{% endif %}"
                              alt="{{ obj.nom_fr }}"
+                             loading="lazy"
                              class="w-16 h-16 rounded-lg object-cover hover:opacity-80 transition">
                     </a>
                     {% else %}
