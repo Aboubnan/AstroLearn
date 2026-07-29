@@ -1,0 +1,16 @@
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+.pytest_cache/
+.git/
+.github/
+RNCP/
+tests/
+.env
+static/uploads/objects/*
+static/uploads/profils/*
+!static/uploads/objects/.gitkeep
+!static/uploads/profils/.gitkeep
+!static/uploads/profils/default_avatar.png
