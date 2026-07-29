@@ -46,3 +46,12 @@ def test_chatbot_api_without_csrf_header_is_rejected():
         response = client.post("/api/chatbot", json={"message": "Salut"})
 
         assert response.status_code == 400
+
+
+def test_comment_post_without_csrf_token_is_rejected():
+    with app.test_client() as client:
+        response = client.post(
+            "/objet/1/commentaire", data={"texte": "Sans token CSRF"}
+        )
+
+        assert response.status_code == 400

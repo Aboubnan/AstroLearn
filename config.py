@@ -16,6 +16,10 @@ DB_NAME: str = os.environ.get('DB_NAME', 'astrolearn_db')
 
 DATABASE_URL: str = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
+# ==================== MONGODB CONFIGURATION (commentaires) ====================
+MONGO_URI: str = os.environ.get('MONGO_URI', 'mongodb://localhost:27017')
+MONGO_DB_NAME: str = os.environ.get('MONGO_DB_NAME', 'astrolearn_nosql')
+
 # ==================== FLASK SERVER ====================
 SECRET_KEY: Optional[str] = os.environ.get('SECRET_KEY')
 if not SECRET_KEY:

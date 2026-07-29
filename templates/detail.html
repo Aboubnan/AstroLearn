@@ -1,6 +1,42 @@
 {% from 'favori_btn.html' import favori_button, favori_script %}
 {% extends "base.html" %}
 
+{% macro render_commentaires(liste, objet_id, profondeur=0) %}
+    {% for c in liste %}
+    <div class="{% if profondeur > 0 %}ml-6 sm:ml-8 mt-4 border-l-2 border-gray-700 pl-4{% else %}border-b border-gray-700 pb-4 mb-4{% endif %}">
+        <div class="flex items-center gap-2 mb-1">
+            <span class="font-semibold text-accent">@{{ c.pseudo }}</span>
+            <span class="text-xs text-gray-500">{{ c.date[:16] | replace('T', ' ') }}</span>
+        </div>
+        <p class="text-gray-300 whitespace-pre-line">{{ c.texte }}</p>
+
+        {% if session.get('user_id') %}
+        <button type="button" onclick="toggleReplyForm('{{ c.commentaire_id }}')"
+                class="text-xs text-gray-500 hover:text-accent mt-1 transition">
+            <i class="fas fa-reply mr-1"></i> Répondre
+        </button>
+        <form method="POST" id="reply-form-{{ c.commentaire_id }}"
+              action="{{ url_for('comment_bp.repondre_commentaire', objet_id=objet_id, commentaire_id=c.commentaire_id) }}"
+              class="hidden mt-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <textarea name="texte" rows="2" maxlength="1000" required placeholder="Répondre à @{{ c.pseudo }}..."
+                      class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent transition"></textarea>
+            <button type="submit"
+                    class="mt-1 text-xs bg-accent hover:bg-accent/80 text-gray-900 font-bold px-3 py-1 rounded transition">
+                Répondre
+            </button>
+        </form>
+        {% endif %}
+
+        {% if c.reponses %}
+        <div class="mt-3">
+            {{ render_commentaires(c.reponses, objet_id, profondeur + 1) }}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% endmacro %}
+
 {% block content %}
 <div class="max-w-6xl mx-auto space-y-12">
 
@@ -101,9 +137,42 @@
         </div>
 
     </div>
+
+    <section id="commentaires" class="bg-gray-800 rounded-3xl shadow-2xl p-6 lg:p-10">
+        <h2 class="text-2xl font-bold text-white mb-6">
+            <i class="fas fa-comments text-accent mr-2"></i> Commentaires
+        </h2>
+
+        {% if session.get('user_id') %}
+        <form method="POST" action="{{ url_for('comment_bp.ajouter_commentaire', objet_id=obj.id_objet) }}" class="mb-8">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <textarea name="texte" rows="3" maxlength="1000" required placeholder="Partage ton avis sur cet objet céleste..."
+                      class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent transition"></textarea>
+            <button type="submit" class="mt-2 bg-accent hover:bg-accent/80 text-gray-900 font-bold px-5 py-2 rounded-lg transition">
+                Publier
+            </button>
+        </form>
+        {% else %}
+        <p class="text-gray-400 mb-8">
+            <a href="{{ url_for('auth_bp.login') }}" class="text-accent hover:underline">Connecte-toi</a> pour laisser un commentaire.
+        </p>
+        {% endif %}
+
+        <div>
+            {% if commentaires %}
+                {{ render_commentaires(commentaires, obj.id_objet) }}
+            {% else %}
+                <p class="text-gray-500 italic">Aucun commentaire pour le moment. Sois le premier à réagir !</p>
+            {% endif %}
+        </div>
+    </section>
 </div>
 
 <script>
+    function toggleReplyForm(id) {
+        document.getElementById('reply-form-' + id).classList.toggle('hidden');
+    }
+
     const originalData = {
         title: {{ obj.nom_fr|tojson }},
         cat:   {{ obj.nom_categorie|tojson }},

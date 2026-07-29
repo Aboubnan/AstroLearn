@@ -13,6 +13,7 @@ from controller.chatbot_routes import chatbot_bp
 from controller.skymap_routes import skymap_bp
 from controller.user_bp import user_bp
 from controller.auth_bp import auth_bp
+from controller.comment_routes import comment_bp
 
 # ----------------------------------------------------
 # 1. DATABASE INITIALIZATION
@@ -55,6 +56,7 @@ app.register_blueprint(chatbot_bp)
 app.register_blueprint(skymap_bp)
 app.register_blueprint(user_bp)
 app.register_blueprint(auth_bp)
+app.register_blueprint(comment_bp)
 
 # ----------------------------------------------------
 # 4. APPLICATION LAUNCH
