@@ -90,15 +90,6 @@ CREATE TABLE IF NOT EXISTS SAISIR (
     FOREIGN KEY (fk_id_objet) REFERENCES OBJET_CELESTE(id_objet)
 );
 
-CREATE TABLE IF NOT EXISTS AVIS_SONDAGE (
-    id_avis      SERIAL PRIMARY KEY,
-    email        TEXT NOT NULL,
-    preference   TEXT NOT NULL,
-    date_sondage TIMESTAMP NOT NULL,
-    fk_id_objet  INTEGER,
-    FOREIGN KEY (fk_id_objet) REFERENCES OBJET_CELESTE(id_objet)
-);
-
 CREATE TABLE IF NOT EXISTS FAVORI (
     id_favori        SERIAL PRIMARY KEY,
     fk_id_utilisateur INTEGER NOT NULL,
@@ -128,6 +119,10 @@ BEGIN
         ALTER TABLE OBJET_CELESTE ADD COLUMN fk_id_utilisateur INTEGER
             REFERENCES UTILISATEUR(id_utilisateur) ON DELETE SET NULL; END IF;
 END$$;
+
+-- Le sondage de satisfaction passe par un formulaire Tally externe,
+-- cette table n'a jamais été utilisée par le code applicatif.
+DROP TABLE IF EXISTS AVIS_SONDAGE;
 """
 
 # ----------------------------------------------------

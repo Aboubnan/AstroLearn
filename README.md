@@ -70,6 +70,39 @@ Voir `.env.example` pour la liste complète. Les indispensables :
 `ADMIN_PSEUDO` / `ADMIN_PASSWORD` / `ADMIN_EMAIL` sont optionnelles : si toutes les trois sont
 renseignées, un compte administrateur est créé automatiquement au premier démarrage.
 
+## Base de données
+
+Le schéma (tables, contraintes, migrations) est créé et mis à jour automatiquement au
+démarrage de l'application (`initialize_database()`).
+
+### Jeu d'essai
+
+Pour peupler une base de **test** avec un jeu de données représentatif (objets célestes,
+utilisateurs, une proposition, des favoris) :
+
+```bash
+python seed_jeu_essai.py
+```
+
+À utiliser uniquement sur une base de test/dev, jamais sur la base de production.
+
+### Sauvegarde et restauration
+
+```bash
+# Sauvegarde
+pg_dump -U $DB_USER -h $DB_HOST -d $DB_NAME -F c -f astrolearn_backup.dump
+
+# Restauration sur une base vide
+pg_restore -U $DB_USER -h $DB_HOST -d $DB_NAME --clean --if-exists astrolearn_backup.dump
+```
+
+Avec Docker, la sauvegarde peut se faire directement depuis le conteneur `db` :
+
+```bash
+docker compose exec db pg_dump -U postgres -d astrolearn_db -F c -f /tmp/backup.dump
+docker compose cp db:/tmp/backup.dump ./astrolearn_backup.dump
+```
+
 ## Tests
 
 ```bash
@@ -86,3 +119,23 @@ PostgreSQL accessible et une clé Gemini valide ; les autres sont des tests unit
 flake8 controller/ model/ --max-line-length=120
 black controller/ model/ --check
 ```
+
+## Éco-conception
+
+Quelques choix appliqués pour limiter l'empreinte de l'application :
+
+- **Chargement différé des images** (`loading="lazy"`) sur les grilles d'objets célestes, les
+  listes de propositions et les tableaux d'administration, pour ne charger que les images
+  réellement visibles à l'écran.
+- **Pas d'images par défaut stockées inutilement** : un placeholder généré à la volée
+  (`placehold.co`) est utilisé tant qu'aucune image n'a été uploadée pour un objet, plutôt que
+  de stocker une image de remplacement pour chaque entrée.
+- **Requêtes SQL ciblées** : les pages ne récupèrent que les colonnes nécessaires à l'affichage,
+  pas de `SELECT *` systématique sur des tables larges.
+- **Dépendances minimales** : pas de framework JS lourd, Three.js n'est chargé que sur la page
+  qui en a besoin (système solaire).
+
+Limite connue : Tailwind CSS est chargé via son CDN de développement (`cdn.tailwindcss.com`),
+qui compile le CSS à la volée côté client. Une build de production avec le CLI Tailwind
+(purge des classes inutilisées, fichier CSS statique et minifié) réduirait le poids transféré
+à chaque page ; ce n'est pas encore en place.
