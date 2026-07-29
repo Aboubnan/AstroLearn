@@ -47,6 +47,7 @@
                     <option value="utilisateurs">👥 Utilisateurs</option>
                     <option value="admins">🛡 Administrateurs</option>
                     <option value="catalogue">📋 Catalogue</option>
+                    <option value="commentaires">💬 Commentaires {% if nb_commentaires_non_lus > 0 %}({{ nb_commentaires_non_lus }}){% endif %}</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
                     <i class="fas fa-chevron-down text-xs"></i>
@@ -78,6 +79,13 @@
             <button onclick="switchTab('catalogue')" id="tab-catalogue"
                     class="tab-btn flex items-center gap-2 px-5 py-4 text-sm font-semibold whitespace-nowrap transition-colors">
                 <i class="fas fa-list"></i> Catalogue
+            </button>
+            <button onclick="switchTab('commentaires')" id="tab-commentaires"
+                    class="tab-btn flex items-center gap-2 px-5 py-4 text-sm font-semibold whitespace-nowrap transition-colors">
+                <i class="fas fa-comments"></i> Commentaires
+                {% if nb_commentaires_non_lus > 0 %}
+                <span class="bg-yellow-500 text-black text-xs px-1.5 py-0.5 rounded-full font-bold">{{ nb_commentaires_non_lus }}</span>
+                {% endif %}
             </button>
         </div>
 
@@ -542,6 +550,60 @@
             </div>
         </div>
 
+        <!-- ==================== ONGLET : COMMENTAIRES ==================== -->
+        <div id="panel-commentaires" class="tab-panel hidden p-6">
+            {% if commentaires %}
+            <div class="space-y-4">
+                {% for c in commentaires %}
+                <div class="bg-gray-900 p-4 rounded-xl border border-gray-700 {% if not c.vu %}border-l-4 border-l-yellow-500{% endif %}">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-semibold {% if c.est_admin %}text-green-400{% else %}text-accent{% endif %}">
+                                {% if c.est_admin %}<i class="fas fa-shield-alt mr-1"></i>{% endif %}
+                                {{ c.pseudo }}
+                            </span>
+                            <span class="text-xs text-gray-500">{{ c.date[:16] | replace('T', ' ') }}</span>
+                            {% if not c.vu %}
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400">Nouveau</span>
+                            {% endif %}
+                        </div>
+                        <a href="{{ url_for('main_bp.object_detail', object_id=c.objet_id) }}#commentaires"
+                           class="text-xs text-gray-400 hover:text-accent transition whitespace-nowrap">
+                            <i class="fas fa-external-link-alt mr-1"></i> {{ c.nom_objet }}
+                        </a>
+                    </div>
+                    <p class="text-gray-300 whitespace-pre-line mb-3">{{ c.texte }}</p>
+                    <div class="flex items-center gap-4">
+                        <button type="button" onclick="toggleAdminReplyForm('{{ c.commentaire_id }}')"
+                                class="text-xs text-gray-500 hover:text-accent transition">
+                            <i class="fas fa-reply mr-1"></i> Répondre
+                        </button>
+                        <form action="{{ url_for('admin_bp.delete_comment', objet_id=c.objet_id, commentaire_id=c.commentaire_id) }}"
+                              method="POST" onsubmit="return confirm('Supprimer ce commentaire (et ses réponses) ?');" class="inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="text-xs text-red-400 hover:text-red-300 transition">
+                                <i class="fas fa-trash mr-1"></i> Supprimer
+                            </button>
+                        </form>
+                    </div>
+                    <form method="POST" id="admin-reply-form-{{ c.commentaire_id }}"
+                          action="{{ url_for('comment_bp.repondre_commentaire', objet_id=c.objet_id, commentaire_id=c.commentaire_id) }}"
+                          class="hidden mt-3">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <textarea name="texte" rows="2" maxlength="1000" required placeholder="Réponse en tant qu'Administration AstroLearn..."
+                                  class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent transition"></textarea>
+                        <button type="submit" class="mt-1 text-xs bg-accent hover:bg-accent/80 text-gray-900 font-bold px-3 py-1 rounded transition">
+                            Répondre
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500 italic text-center py-8">Aucun commentaire pour le moment.</p>
+            {% endif %}
+        </div>
+
     </div><!-- fin onglets -->
 </div>
 
@@ -562,7 +624,11 @@
 </style>
 
 <script>
-const TABS = ['actions', 'propositions', 'utilisateurs', 'admins', 'catalogue'];
+const TABS = ['actions', 'propositions', 'utilisateurs', 'admins', 'catalogue', 'commentaires'];
+
+function toggleAdminReplyForm(id) {
+    document.getElementById('admin-reply-form-' + id).classList.toggle('hidden');
+}
 
 function switchTab(name) {
     TABS.forEach(t => {

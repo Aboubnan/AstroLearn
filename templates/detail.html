@@ -5,12 +5,16 @@
     {% for c in liste %}
     <div class="{% if profondeur > 0 %}ml-6 sm:ml-8 mt-4 border-l-2 border-gray-700 pl-4{% else %}border-b border-gray-700 pb-4 mb-4{% endif %}">
         <div class="flex items-center gap-2 mb-1">
+            {% if c.est_admin %}
+            <span class="font-semibold text-green-400"><i class="fas fa-shield-alt mr-1"></i>{{ c.pseudo }}</span>
+            {% else %}
             <span class="font-semibold text-accent">@{{ c.pseudo }}</span>
+            {% endif %}
             <span class="text-xs text-gray-500">{{ c.date[:16] | replace('T', ' ') }}</span>
         </div>
         <p class="text-gray-300 whitespace-pre-line">{{ c.texte }}</p>
 
-        {% if session.get('user_id') %}
+        {% if session.get('user_id') or session.get('is_admin') %}
         <button type="button" onclick="toggleReplyForm('{{ c.commentaire_id }}')"
                 class="text-xs text-gray-500 hover:text-accent mt-1 transition">
             <i class="fas fa-reply mr-1"></i> Répondre
@@ -143,7 +147,7 @@
             <i class="fas fa-comments text-accent mr-2"></i> Commentaires
         </h2>
 
-        {% if session.get('user_id') %}
+        {% if session.get('user_id') or session.get('is_admin') %}
         <form method="POST" action="{{ url_for('comment_bp.ajouter_commentaire', objet_id=obj.id_objet) }}" class="mb-8">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <textarea name="texte" rows="3" maxlength="1000" required placeholder="Partage ton avis sur cet objet céleste..."

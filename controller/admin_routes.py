@@ -24,6 +24,7 @@ from model.database import (
     delete_utilisateur,
 )
 from model.api_utils import ingest_solar_system_data_paged
+from model.comment_service import CommentaireService
 from controller.user_bp import allowed_file
 from werkzeug.utils import secure_filename
 from datetime import date
@@ -131,6 +132,16 @@ def admin_dashboard():
     # Liste des utilisateurs
     utilisateurs = get_all_utilisateurs()
 
+    # Commentaires (modération) — on réutilise `objects` déjà chargé pour éviter
+    # une requête supplémentaire juste pour retrouver le nom de chaque objet.
+    noms_objets = {o["id_objet"]: o["nom_fr"] for o in objects}
+    comment_service = CommentaireService()
+    commentaires = comment_service.get_tous_commentaires()
+    for c in commentaires:
+        c["nom_objet"] = noms_objets.get(c["objet_id"], f"Objet #{c['objet_id']}")
+    nb_commentaires_non_lus = sum(1 for c in commentaires if not c.get("vu"))
+    comment_service.marquer_tous_lus()
+
     return render_template(
         "admin_dashboard.html",
         objects=objects,
@@ -139,6 +150,8 @@ def admin_dashboard():
         propositions=propositions,
         nb_en_attente=nb_en_attente,
         utilisateurs=utilisateurs,
+        commentaires=commentaires,
+        nb_commentaires_non_lus=nb_commentaires_non_lus,
     )
 
 
@@ -477,6 +490,21 @@ def delete_user(user_id):
     else:
         flash("Erreur lors de la suppression de l'utilisateur.", "error")
     return redirect(url_for("admin_bp.admin_dashboard") + "#section-utilisateurs")
+
+
+# --- GESTION DES COMMENTAIRES ---
+
+
+@admin_bp.route(
+    "/admin/commentaire/<int:objet_id>/<commentaire_id>/supprimer", methods=["POST"]
+)
+@admin_required
+def delete_comment(objet_id, commentaire_id):
+    if CommentaireService().supprimer_commentaire(objet_id, commentaire_id):
+        flash("Commentaire supprimé.", "success")
+    else:
+        flash("Commentaire introuvable.", "error")
+    return redirect(url_for("admin_bp.admin_dashboard") + "#commentaires")
 
 
 # --- API & TOOLS ---
