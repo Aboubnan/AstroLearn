@@ -25,6 +25,7 @@ from model.database import (
     est_favori,
     count_utilisateurs,
 )
+from model.comment_service import CommentaireService
 
 # Blueprint creation
 main_bp = Blueprint("main_bp", __name__)
@@ -106,11 +107,14 @@ def object_detail(object_id: int) -> Union[str, Response]:
     est_fav = est_favori(user_id, object_id) if user_id else False
     nb_favoris = count_favoris_objet(object_id)
 
+    commentaires = CommentaireService().get_commentaires(object_id)
+
     return render_template(
         "detail.html",
         obj=obj,
         est_favori=est_fav,
         nb_favoris=nb_favoris,
+        commentaires=commentaires,
         now=datetime.datetime.now(),
         title=f"Détail : {obj['nom_fr']}",
     )

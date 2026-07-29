@@ -17,6 +17,20 @@ services:
       timeout: 5s
       retries: 5
 
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      # Port hôte 27018 pour ne pas entrer en conflit avec un MongoDB local existant.
+      - "27018:27017"
+    volumes:
+      - astrolearn_mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   web:
     build: .
     restart: unless-stopped
@@ -25,13 +39,17 @@ services:
     environment:
       DB_HOST: db
       DB_PORT: 5432
+      MONGO_URI: mongodb://mongo:27017
     ports:
       - "5000:5000"
     depends_on:
       db:
+        condition: service_healthy
+      mongo:
         condition: service_healthy
     volumes:
       - ./static/uploads:/app/static/uploads
 
 volumes:
   astrolearn_db_data:
+  astrolearn_mongo_data:
