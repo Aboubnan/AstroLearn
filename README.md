@@ -137,6 +137,13 @@ commentaires imbriqué dedans :
 La logique métier (validation, insertion récursive dans l'arbre) est encapsulée dans
 `model/comment_service.py` (classe `CommentaireService`).
 
+Un compte utilisateur ou un compte admin peuvent tous les deux commenter/répondre (deux
+systèmes de session distincts, gérés par `controller/comment_routes.py`). Les commentaires
+postés par un admin apparaissent sous l'identité générique « Administration AstroLearn ».
+Le tableau de bord admin propose un onglet **Commentaires** : liste de tous les commentaires
+tous objets confondus, badge du nombre de nouveaux commentaires, réponse et suppression
+(avec ses éventuelles réponses imbriquées) directement depuis l'interface.
+
 ## Tests
 
 ```bash
