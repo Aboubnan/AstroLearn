@@ -7,18 +7,62 @@
     <div class="bg-gray-800 p-4 rounded-lg mb-10">
         <p class="font-bold mb-2 text-blue-400">Sommaire :</p>
         <ul class="list-disc list-inside space-y-1">
-            <li><a href="#confidentialite" class="hover:underline text-blue-300">Politique de Confidentialité</a></li>
+            <li><a href="#mentions-legales" class="hover:underline text-blue-300">Mentions Légales</a></li>
+            <li><a href="#confidentialite" class="hover:underline text-blue-300">Politique de Confidentialité (RGPD)</a></li>
             <li><a href="#conditions" class="hover:underline text-blue-300">Conditions d'Utilisation</a></li>
         </ul>
     </div>
+
+    <section id="mentions-legales" class="mb-12 scroll-mt-24">
+        <h2 class="text-2xl font-semibold text-green-400 mb-4 flex items-center">
+            <i class="fas fa-balance-scale mr-2"></i> Mentions Légales
+        </h2>
+        <div class="space-y-4 text-gray-400 leading-relaxed">
+            <p><strong>Éditeur du site :</strong> AstroLearn est un projet personnel développé dans le cadre d'une
+            formation Concepteur Développeur d'Applications, édité par Naya Web. Contact :
+            <a href="mailto:contact@nayaweb.fr" class="text-blue-300 hover:underline">contact@nayaweb.fr</a>.
+            Conformément à l'article 6-III de la loi n°2004-575 du 21 juin 2004 pour la confiance dans l'économie
+            numérique, les coordonnées complètes de l'éditeur peuvent être obtenues sur simple demande auprès de
+            l'hébergeur.</p>
+            <p><strong>Hébergeur :</strong> OVH SAS, 2 rue Kellermann, 59100 Roubaix, France.</p>
+            <p><strong>Directeur de la publication :</strong> Naya Web.</p>
+        </div>
+    </section>
+
+    <hr class="border-gray-800 mb-12">
 
     <section id="confidentialite" class="mb-12 scroll-mt-24">
         <h2 class="text-2xl font-semibold text-blue-400 mb-4 flex items-center">
             <i class="fas fa-shield-alt mr-2"></i> Politique de Confidentialité
         </h2>
         <div class="space-y-4 text-gray-400 leading-relaxed">
-            <p><strong>AstroLearn</strong> s'engage à ce que la collecte et le traitement de vos données soient conformes au RGPD. Nous ne collectons que les données strictement nécessaires (ex: réponses au sondage).</p>
-            <p>Vos données ne sont jamais cédées à des tiers et sont utilisées uniquement pour améliorer l'expérience pédagogique du site.</p>
+            <p><strong>AstroLearn</strong> s'engage à ce que la collecte et le traitement de vos données soient
+            conformes au Règlement Général sur la Protection des Données (RGPD).</p>
+
+            <p><strong>Données collectées :</strong> lors de la création d'un compte, nous collectons votre pseudo,
+            votre adresse email et votre mot de passe (haché avec bcrypt, jamais stocké en clair). Une photo de
+            profil peut être ajoutée facultativement. Vos favoris et vos propositions d'objets célestes sont
+            également associés à votre compte.</p>
+
+            <p><strong>Finalité :</strong> ces données sont utilisées uniquement pour permettre l'authentification,
+            la gestion de votre compte et l'usage des fonctionnalités du site (favoris, propositions de contenu).</p>
+
+            <p><strong>Destinataires :</strong> vos données ne sont jamais cédées ni vendues à des tiers. Les
+            messages échangés avec l'assistant AstroIA transitent par l'API Google Gemini, uniquement pour générer
+            la réponse, sans conservation associée à votre identité côté AstroLearn.</p>
+
+            <p><strong>Durée de conservation :</strong> vos données sont conservées tant que votre compte est actif.
+            Vous pouvez demander leur suppression à tout moment.</p>
+
+            <p><strong>Vos droits :</strong> conformément au RGPD, vous disposez d'un droit d'accès, de
+            rectification, de suppression et d'opposition concernant vos données personnelles. Vous pouvez exercer
+            ces droits en nous contactant à
+            <a href="mailto:contact@nayaweb.fr" class="text-blue-300 hover:underline">contact@nayaweb.fr</a>, ou en
+            introduisant une réclamation auprès de la CNIL (cnil.fr).</p>
+
+            <p><strong>Cookies :</strong> AstroLearn utilise uniquement un cookie de session strictement nécessaire
+            au fonctionnement du site (maintien de la connexion), sécurisé (HttpOnly, Secure, SameSite). Aucun
+            cookie de mesure d'audience ou de publicité tiers n'est déposé.</p>
         </div>
     </section>
 
