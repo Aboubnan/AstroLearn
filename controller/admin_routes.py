@@ -22,6 +22,7 @@ from model.database import (
     traiter_proposition,
     get_all_utilisateurs,
     delete_utilisateur,
+    enregistrer_saisie,
 )
 from model.api_utils import ingest_solar_system_data_paged
 from model.comment_service import CommentaireService
@@ -91,9 +92,13 @@ def admin_dashboard():
     count_objects = cur.fetchone()[0]
 
     cur.execute("""
-        SELECT o.id_objet, o.nom_fr, o.date_publication, c.nom_categorie
+        SELECT o.id_objet, o.nom_fr, o.date_publication, c.nom_categorie,
+               STRING_AGG(DISTINCT a.pseudo, ', ') AS saisi_par
         FROM objet_celeste o
         JOIN categorie c ON o.fk_id_categorie = c.id_categorie
+        LEFT JOIN SAISIR s ON s.fk_id_objet = o.id_objet
+        LEFT JOIN ADMINISTRATEUR a ON a.id_admin = s.fk_id_admin
+        GROUP BY o.id_objet, o.nom_fr, o.date_publication, c.nom_categorie
         ORDER BY o.date_publication DESC
     """)
     rows = cur.fetchall()
@@ -103,6 +108,7 @@ def admin_dashboard():
             "nom_fr": r[1],
             "date_publication": r[2],
             "nom_categorie": r[3],
+            "saisi_par": r[4],
         }
         for r in rows
     ]
@@ -187,10 +193,13 @@ def add_celestial_object():
                 INSERT INTO objet_celeste
                 (nom_fr, nom_scientifique, description, url_image, date_publication, fk_id_categorie)
                 VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING id_objet
             """,
                 (name, name, description, image_url, date.today(), id_cat),
             )
+            nouvel_id = cur.fetchone()[0]
             conn.commit()
+            enregistrer_saisie(session["admin_id"], nouvel_id)
             flash(f"'{name}' ajouté avec succès !", "success")
             return redirect(url_for("admin_bp.admin_dashboard"))
         except Exception as e:
@@ -440,6 +449,7 @@ def traiter_proposition_route(prop_id):
         nom_scientifique,
         description,
         id_categorie,
+        session.get("admin_id"),
     ):
         labels = {
             "accepte": "acceptée ✅",
