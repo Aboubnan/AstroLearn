@@ -66,6 +66,9 @@ Voir [`DEPLOIEMENT.md`](./DEPLOIEMENT.md) pour la procédure complète (installa
 nginx, systemd, MongoDB sécurisé) et le script [`deploy.sh`](./deploy.sh) pour les mises
 à jour courantes.
 
+Veille technologique et sécurité liée au déploiement : voir
+[`VEILLE_DEPLOIEMENT.md`](./VEILLE_DEPLOIEMENT.md).
+
 ## Variables d'environnement
 
 Voir `.env.example` pour la liste complète. Les indispensables :
