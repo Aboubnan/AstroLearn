@@ -517,6 +517,7 @@
                             <th class="p-4 border-b border-gray-700">Nom</th>
                             <th class="p-4 border-b border-gray-700">Catégorie</th>
                             <th class="p-4 border-b border-gray-700">Date</th>
+                            <th class="p-4 border-b border-gray-700">Saisi par</th>
                             <th class="p-4 border-b border-gray-700 text-right">Actions</th>
                         </tr>
                     </thead>
@@ -526,6 +527,7 @@
                             <td class="p-4 font-medium text-white">{{ obj.nom_fr }}</td>
                             <td class="p-4"><span class="px-2 py-1 rounded-md bg-accent/10 text-accent text-xs">{{ obj.nom_categorie }}</span></td>
                             <td class="p-4 text-sm text-gray-500">{{ obj.date_publication }}</td>
+                            <td class="p-4 text-sm text-gray-500">{{ obj.saisi_par or '—' }}</td>
                             <td class="p-4 text-right">
                                 <div class="flex justify-end gap-2">
                                     <a href="{{ url_for('admin_bp.edit_celestial_object', object_id=obj.id_objet) }}"
@@ -543,7 +545,7 @@
                             </td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="4" class="p-8 text-center text-gray-500 italic">Aucun objet.</td></tr>
+                        <tr><td colspan="5" class="p-8 text-center text-gray-500 italic">Aucun objet.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>

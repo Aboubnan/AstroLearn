@@ -742,6 +742,7 @@ def traiter_proposition(
     nom_scientifique: str = None,
     description: str = None,
     id_categorie: int = None,
+    admin_id: int = None,
 ) -> bool:
     conn = get_db_connection()
     if not conn:
@@ -767,6 +768,7 @@ def traiter_proposition(
                      date_publication, fk_id_categorie, fk_id_utilisateur)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (nom_fr) DO NOTHING
+                    RETURNING id_objet
                 """,
                     (
                         nom_fr or prop["nom_fr"],
@@ -778,12 +780,51 @@ def traiter_proposition(
                         prop["fk_id_utilisateur"],
                     ),
                 )
+                nouvel_objet = cur.fetchone()
+                if nouvel_objet and admin_id:
+                    cur.execute(
+                        """
+                        INSERT INTO SAISIR (fk_id_admin, fk_id_objet, date_saisie)
+                        VALUES (%s, %s, NOW())
+                        ON CONFLICT (fk_id_admin, fk_id_objet)
+                        DO UPDATE SET date_saisie = NOW()
+                    """,
+                        (admin_id, nouvel_objet["id_objet"]),
+                    )
         conn.commit()
         return True
     except Exception as e:
         print(f"❌ Erreur traitement proposition : {e}")
         conn.rollback()
         return False
+    finally:
+        conn.close()
+
+
+def enregistrer_saisie(admin_id: int, objet_id: int) -> None:
+    """Trace qu'un admin a saisi (ajouté ou validé) un objet céleste (table SAISIR).
+
+    Relation N,N : plusieurs admins peuvent avoir saisi/modifié le même objet
+    (ex: un admin l'ajoute, un autre le modifie ensuite).
+    """
+    conn = get_db_connection()
+    if not conn:
+        return
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO SAISIR (fk_id_admin, fk_id_objet, date_saisie)
+                VALUES (%s, %s, NOW())
+                ON CONFLICT (fk_id_admin, fk_id_objet)
+                DO UPDATE SET date_saisie = NOW()
+            """,
+                (admin_id, objet_id),
+            )
+        conn.commit()
+    except Exception as e:
+        print(f"❌ Erreur enregistrement saisie : {e}")
+        conn.rollback()
     finally:
         conn.close()
 
