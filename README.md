@@ -150,9 +150,14 @@ tous objets confondus, badge du nombre de nouveaux commentaires, réponse et sup
 pytest tests/
 ```
 
-Certains tests (`test_db.py`, `test_db_connexion.py`, `test_astroia.py`) nécessitent une base
-PostgreSQL accessible et une clé Gemini valide ; les autres sont des tests unitaires isolés
+`test_db.py` et `test_db_connexion.py` nécessitent une base PostgreSQL accessible (fournie par un
+conteneur de service dans la CI GitHub Actions) ; les autres sont des tests unitaires isolés
 (mocks) qui tournent sans dépendance externe.
+
+`test_astroia.py` appelle une vraie clé API Gemini payante : il est volontairement exclu de la
+CI (`pytest tests/ --ignore=tests/test_astroia.py`) pour ne pas consommer de quota ni dépendre
+d'un service externe à chaque push. À lancer manuellement en local si besoin :
+`pytest tests/test_astroia.py -v`.
 
 ## Qualité de code
 
