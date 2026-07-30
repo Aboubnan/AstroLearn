@@ -155,6 +155,10 @@ tous objets confondus, badge du nombre de nouveaux commentaires, réponse et sup
 
 ## Tests
 
+Voir [`PLAN_DE_TESTS.md`](./PLAN_DE_TESTS.md) pour le plan de tests complet
+(couverture fonctionnelle, jeu d'essai détaillé, stratégie et sécurité des
+tests).
+
 ```bash
 pytest tests/
 ```
