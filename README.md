@@ -60,6 +60,12 @@ Le service `web` (Flask + Gunicorn) démarre sur http://localhost:5000. Le servi
 port hôte 27018, pour éviter tout conflit avec des instances locales déjà installées. Le
 schéma PostgreSQL est créé automatiquement au premier démarrage.
 
+## Déploiement en production
+
+Voir [`DEPLOIEMENT.md`](./DEPLOIEMENT.md) pour la procédure complète (installation VPS,
+nginx, systemd, MongoDB sécurisé) et le script [`deploy.sh`](./deploy.sh) pour les mises
+à jour courantes.
+
 ## Variables d'environnement
 
 Voir `.env.example` pour la liste complète. Les indispensables :
