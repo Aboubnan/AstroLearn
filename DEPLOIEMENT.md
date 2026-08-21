@@ -39,8 +39,8 @@ sudo -u postgres psql
 ```
 ```sql
 CREATE DATABASE astrolearn_db;
-CREATE USER astrolearn_user WITH PASSWORD 'un-mot-de-passe-fort';
-GRANT ALL PRIVILEGES ON DATABASE astrolearn_db TO astrolearn_user;
+CREATE USER astro_user WITH PASSWORD 'un-mot-de-passe-fort';
+GRANT ALL PRIVILEGES ON DATABASE astrolearn_db TO astro_user;
 ```
 
 ### 3. MongoDB (commentaires)
