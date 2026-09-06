@@ -11,7 +11,7 @@ Démo en ligne : https://astrolearn.nayaweb.fr
 - **NoSQL** : MongoDB (pymongo) pour les fils de commentaires imbriqués
 - **Frontend** : Jinja2, Tailwind CSS, Three.js (système solaire 3D), JavaScript vanilla
 - **Sécurité** : bcrypt (hachage des mots de passe), Flask-WTF (protection CSRF)
-- **IA** : API Gemini 2.5 Flash (chatbot AstroIA)
+- **IA** : API Mistral (mistral-small-latest, chatbot AstroIA)
 - **Tests** : pytest
 - **CI** : GitHub Actions (flake8, black, pytest)
 - **Déploiement** : Gunicorn + nginx + systemd (VPS), ou Docker
@@ -37,7 +37,7 @@ source venv/bin/activate  # venv\Scripts\activate sous Windows
 pip install -r requirements.txt
 
 cp .env.example .env
-# éditer .env : DB_PASSWORD, SECRET_KEY, GEMINI_API_KEY au minimum
+# éditer .env : DB_PASSWORD, SECRET_KEY, MISTRAL_API_KEY au minimum
 
 python app.py
 ```
@@ -50,7 +50,7 @@ Prérequis : Docker et Docker Compose.
 
 ```bash
 cp .env.example .env
-# éditer .env : DB_PASSWORD, SECRET_KEY, GEMINI_API_KEY au minimum
+# éditer .env : DB_PASSWORD, SECRET_KEY, MISTRAL_API_KEY au minimum
 
 docker compose up --build
 ```
@@ -77,7 +77,7 @@ Voir `.env.example` pour la liste complète. Les indispensables :
 |---|---|
 | `DB_PASSWORD` | Mot de passe PostgreSQL |
 | `SECRET_KEY` | Clé de signature des sessions Flask (`python -c "import secrets; print(secrets.token_hex(32))"`) |
-| `GEMINI_API_KEY` | Clé API Google Gemini, pour le chatbot AstroIA |
+| `MISTRAL_API_KEY` | Clé API Mistral, pour le chatbot AstroIA |
 
 `MONGO_URI` est optionnelle (par défaut `mongodb://localhost:27017`, ou `mongodb://mongo:27017`
 avec Docker via `docker-compose.yml`).
@@ -167,7 +167,7 @@ pytest tests/
 conteneur de service dans la CI GitHub Actions) ; les autres sont des tests unitaires isolés
 (mocks) qui tournent sans dépendance externe.
 
-`test_astroia.py` appelle une vraie clé API Gemini payante : il est volontairement exclu de la
+`test_astroia.py` appelle une vraie clé API Mistral : il est volontairement exclu de la
 CI (`pytest tests/ --ignore=tests/test_astroia.py`) pour ne pas consommer de quota ni dépendre
 d'un service externe à chaque push. À lancer manuellement en local si besoin :
 `pytest tests/test_astroia.py -v`.

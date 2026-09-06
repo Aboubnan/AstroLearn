@@ -82,7 +82,7 @@ cp .env.example .env
 ```
 Éditer `.env` avec les vraies valeurs de production : `DB_PASSWORD`, `SECRET_KEY`
 (générée via `python -c "import secrets; print(secrets.token_hex(32))"`),
-`GEMINI_API_KEY`, `MONGO_URI` (`mongodb://astrolearn_app:MOT_DE_PASSE@localhost:27017/astrolearn_nosql`).
+`MISTRAL_API_KEY`, `MONGO_URI` (`mongodb://astrolearn_app:MOT_DE_PASSE@localhost:27017/astrolearn_nosql`).
 
 ### 5. Service systemd
 

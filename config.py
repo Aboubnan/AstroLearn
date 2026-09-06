@@ -46,7 +46,8 @@ ADMIN_PRENOM: str = os.environ.get('ADMIN_PRENOM', 'Super')
 # ==================== API CONFIGURATION ====================
 # Ici, on ne met PLUS JAMAIS la clé en texte brut. 
 # Si os.environ.get ne trouve rien, l'app ne pourra pas appeler l'API, ce qui est normal.
-API_KEY: Optional[str] = os.environ.get('GEMINI_API_KEY')
+API_KEY: Optional[str] = os.environ.get('MISTRAL_API_KEY')
 
-GEMINI_API_URL: str = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
-NASA_IMAGES_URL: str = "https://images-api.nasa.gov/search"
+MISTRAL_API_URL: str = "https://api.mistral.ai/v1/chat/completions"
+MISTRAL_MODEL: str = "mistral-small-latest"
+NASA_IMAGES_URL: str = "https://images-api.nasa.gov/search"
