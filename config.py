@@ -49,5 +49,5 @@ ADMIN_PRENOM: str = os.environ.get('ADMIN_PRENOM', 'Super')
 API_KEY: Optional[str] = os.environ.get('MISTRAL_API_KEY')
 
 MISTRAL_API_URL: str = "https://api.mistral.ai/v1/chat/completions"
-MISTRAL_MODEL: str = "mistral-small-latest"
+MISTRAL_MODEL: str = "ministral-8b-2512"
 NASA_IMAGES_URL: str = "https://images-api.nasa.gov/search"
