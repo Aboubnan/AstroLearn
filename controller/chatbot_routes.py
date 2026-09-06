@@ -12,7 +12,7 @@ chatbot_bp = Blueprint("chatbot_bp", __name__)
 @chatbot_bp.route("/api/chatbot", methods=["POST"])
 def api_chatbot() -> Union[Response, Tuple[Response, int]]:
     """
-    API endpoint for the AstroIA chatbot using Mistral (mistral-small-latest).
+    API endpoint for the AstroIA chatbot using Mistral (ministral-8b-2512).
     """
     try:
         if not request.is_json:

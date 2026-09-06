@@ -32,7 +32,7 @@ def call_mistral_api(
     history: Optional[List[Dict[str, str]]] = None,
 ) -> Optional[str]:
     """
-    Appelle l'API Mistral (mistral-small-latest) avec support de l'historique et des
+    Appelle l'API Mistral (ministral-8b-2512) avec support de l'historique et des
     instructions système.
 
     Remplace Gemini le 31/08/2026 : la clé Gemini fonctionne très bien depuis un poste
@@ -40,6 +40,13 @@ def call_mistral_api(
     supported for the API use") — confirmé au niveau de l'IP du serveur (même clé, même
     modèle, testé en direct), pas de la clé ni du modèle. Mistral n'a pas cette
     restriction, testé et fonctionnel depuis ce même serveur.
+
+    Modèle changé le 06/09/2026 : `mistral-small-latest` (et sa version datée
+    `mistral-small-2603`) a un quota de requêtes à 0/minute sur le niveau gratuit tant
+    que le Pay-As-You-Go n'est pas activé (carte bancaire requise). La famille
+    `ministral` (modèles plus légers, open-weight) est en revanche incluse gratuitement
+    sans activation : `ministral-8b-2512` offre un vrai quota (188 req/min mesuré) sans
+    carte bancaire, largement suffisant pour ce chatbot.
     """
     if not API_KEY:
         return "❌ Erreur : Clé API manquante dans le fichier .env"

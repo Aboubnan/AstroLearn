@@ -11,7 +11,7 @@ Démo en ligne : https://astrolearn.nayaweb.fr
 - **NoSQL** : MongoDB (pymongo) pour les fils de commentaires imbriqués
 - **Frontend** : Jinja2, Tailwind CSS, Three.js (système solaire 3D), JavaScript vanilla
 - **Sécurité** : bcrypt (hachage des mots de passe), Flask-WTF (protection CSRF)
-- **IA** : API Mistral (mistral-small-latest, chatbot AstroIA)
+- **IA** : API Mistral (ministral-8b-2512, chatbot AstroIA)
 - **Tests** : pytest
 - **CI** : GitHub Actions (flake8, black, pytest)
 - **Déploiement** : Gunicorn + nginx + systemd (VPS), ou Docker
