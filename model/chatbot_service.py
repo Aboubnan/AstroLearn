@@ -1,14 +1,14 @@
 # model/chatbot_service.py
 
 from typing import Dict, List, Optional
-from model.api_utils import call_gemini_api
+from model.api_utils import call_mistral_api
 
 
 class AstroIAChatbot:
     """Assistant conversationnel AstroIA.
 
     Encapsule la validation des messages, la construction du contexte envoyé
-    à Gemini (prompt système + historique tronqué) et le nettoyage de la
+    à Mistral (prompt système + historique tronqué) et le nettoyage de la
     réponse. La route Flask ne fait que traduire les exceptions levées ici en
     réponses HTTP.
     """
@@ -32,7 +32,7 @@ class AstroIAChatbot:
         return list(self._history)
 
     def ask(self, user_message: str) -> str:
-        """Valide `user_message`, interroge Gemini et renvoie une réponse nettoyée.
+        """Valide `user_message`, interroge Mistral et renvoie une réponse nettoyée.
 
         Lève ValueError si le message est vide ou trop long, RuntimeError si
         l'IA ne renvoie aucune réponse exploitable.
@@ -46,7 +46,7 @@ class AstroIAChatbot:
             )
 
         history_start = max(0, len(self._history) - self.MAX_HISTORY_MESSAGES)
-        raw_response = call_gemini_api(
+        raw_response = call_mistral_api(
             user_input=message,
             system_instruction=self.SYSTEM_PROMPT,
             history=self._history[history_start:],

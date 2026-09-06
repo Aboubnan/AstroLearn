@@ -4,13 +4,8 @@ import time
 import functools
 import requests
 from typing import Callable, Any, Optional, List, Dict
-from config import API_KEY, NASA_IMAGES_URL
+from config import API_KEY, MISTRAL_API_URL, MISTRAL_MODEL, NASA_IMAGES_URL
 from model.database import insert_solar_system_body
-
-# Gemini Configuration - 2026 Stable Endpoint
-GEMINI_API_URL: str = (
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
-)
 
 
 def retry_with_backoff(func: Callable) -> Callable:
@@ -31,47 +26,52 @@ def retry_with_backoff(func: Callable) -> Callable:
 
 
 @retry_with_backoff
-def call_gemini_api(
+def call_mistral_api(
     user_input: str,
     system_instruction: Optional[str] = None,
     history: Optional[List[Dict[str, str]]] = None,
 ) -> Optional[str]:
     """
-    Appelle l'API Gemini 2.5 Flash avec support de l'historique et des instructions système.
+    Appelle l'API Mistral (mistral-small-latest) avec support de l'historique et des
+    instructions système.
+
+    Remplace Gemini le 31/08/2026 : la clé Gemini fonctionne très bien depuis un poste
+    résidentiel mais échoue systématiquement depuis ce VPS OVH ("User location is not
+    supported for the API use") — confirmé au niveau de l'IP du serveur (même clé, même
+    modèle, testé en direct), pas de la clé ni du modèle. Mistral n'a pas cette
+    restriction, testé et fonctionnel depuis ce même serveur.
     """
     if not API_KEY:
         return "❌ Erreur : Clé API manquante dans le fichier .env"
 
     history = history or []
 
-    # 1. Préparation de l'historique au format Gemini (user -> user, assistant -> model)
-    contents = []
+    # Format Mistral : liste de messages {role, content} façon OpenAI. Le rôle
+    # "assistant" est déjà celui utilisé côté historique (pas de renommage "model"
+    # comme il fallait le faire avec Gemini).
+    messages: List[Dict[str, str]] = []
+    if system_instruction:
+        messages.append({"role": "system", "content": system_instruction})
     for msg in history:
-        role = "user" if msg["role"] == "user" else "model"
-        contents.append({"role": role, "parts": [{"text": msg["content"]}]})
+        role = "user" if msg["role"] == "user" else "assistant"
+        messages.append({"role": role, "content": msg["content"]})
+    messages.append({"role": "user", "content": user_input})
 
-    # Ajouter le message actuel de l'utilisateur
-    contents.append({"role": "user", "parts": [{"text": user_input}]})
-
-    # 2. Construction du Payload
     payload: Dict[str, Any] = {
-        "contents": contents,
-        "generationConfig": {
-            "temperature": 0.7,
-            "maxOutputTokens": 800,
-        },
+        "model": MISTRAL_MODEL,
+        "messages": messages,
+        "temperature": 0.7,
+        "max_tokens": 800,
     }
 
-    # Ajout des instructions système si présentes
-    if system_instruction:
-        payload["system_instruction"] = {"parts": [{"text": system_instruction}]}
-
-    url: str = f"{GEMINI_API_URL}?key={API_KEY}"
-    headers: Dict[str, str] = {"Content-Type": "application/json"}
+    headers: Dict[str, str] = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {API_KEY}",
+    }
 
     try:
         print(f"🚀 AstroIA : Envoi de la requête (Historique: {len(history)} messages)")
-        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        response = requests.post(MISTRAL_API_URL, headers=headers, json=payload, timeout=30)
 
         if response.status_code == 429:
             return "⚠️ Quota dépassé. Attends une minute."
@@ -79,16 +79,16 @@ def call_gemini_api(
         response.raise_for_status()
         result = response.json()
 
-        # Extraction de la réponse
-        if "candidates" in result and result["candidates"]:
-            parts = result["candidates"][0].get("content", {}).get("parts", [])
-            if parts:
-                return parts[0].get("text", "").strip()
+        choices = result.get("choices", [])
+        if choices:
+            content_text = choices[0].get("message", {}).get("content", "")
+            if content_text:
+                return content_text.strip()
 
         return "❌ L'IA a renvoyé une réponse vide."
 
     except Exception as e:
-        print(f"❌ Erreur Gemini API : {e}")
+        print(f"❌ Erreur Mistral API : {e}")
         return None
 
 
