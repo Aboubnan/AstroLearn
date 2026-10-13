@@ -15,6 +15,6 @@ pymongo==4.17.0
 python-dotenv==1.2.2
 requests==2.33.0
 urllib3==2.7.0
-Werkzeug==3.1.6
+Werkzeug==3.1.9
 deep-translator==1.11.4
 gunicorn==23.0.0
